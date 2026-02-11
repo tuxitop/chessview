@@ -44,6 +44,7 @@ Create a fenced code block with the language `chessview`:
 
 ### Display a PGN Game
 
+````
 ```chessview
 [Event "World Championship"]
 [White "Kasparov, Garry"]
@@ -61,35 +62,41 @@ Create a fenced code block with the language `chessview`:
 9. Bxc4 bxc4 39. Qxh8 Rd3 40. Qa8 c3 41. Qa4+ Ke1
 10. f4 f5 43. Kc1 Rd2 44. Qa7 1-0
 ```
+````
 
 ### Display a FEN Position
 
+````
 ```chessview
 rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
 ```
+````
 
 ### Create a Puzzle
 
+````
 ```chessview
 [puzzle]
 [rating: 1500]
 [title: Scholar's Mate]
-
 ---
 
 [FEN "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4"]
 
 1. Qxf7#
 ```
+````
 
 ### Board Orientation
 
+````
 ```chessview
 [black]
 [Event "My Game"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5
 ```
+````
 
 Available markers:
 
@@ -98,15 +105,18 @@ Available markers:
 
 ### Static Board (No Interaction)
 
+````
 ```chessview
 [static]
 rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
 ```
+````
 
 ### Arrows and Circles
 
 Using markers before the PGN/FEN:
 
+````
 ```chessview
 [arrow: e2e4 green]
 [arrow: d2d4 blue]
@@ -114,14 +124,17 @@ Using markers before the PGN/FEN:
 
 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 ```
+````
 
 Using standard PGN comment annotations:
 
+````
 ```chessview
 [Event "Arrow Demo"]
 
 1. e4 {[%cal Ge2e4,Rd7d5] [%csl Gd4,Re5]} e5 2. Nf3
 ```
+````
 
 Arrow/circle color codes: `G` = green, `R` = red, `B` = blue, `Y` = yellow, `O` = orange, `P` = purple
 
@@ -129,17 +142,21 @@ Arrow/circle color codes: `G` = green, `R` = red, `B` = blue, `Y` = yellow, `O` 
 
 Inline annotations:
 
+````
 ```chessview
 
 1. e4! e5 2. Nf3!! Nc6? 3. Bb5?! a6!? 4. Ba4 Nf6??
 ```
+````
 
 PGN standard NAGs:
 
+````
 ```chessview
 
 1. e4 $1 e5 $2 2. Nf3 $3 Nc6 $4 3. Bb5 $5 a6 $6
 ```
+````
 
 | Symbol | NAG  | Meaning          |
 | ------ | ---- | ---------------- |
@@ -152,23 +169,27 @@ PGN standard NAGs:
 
 ### Comments
 
+````
 ```chessview
-
 1. e4 {The King's Pawn opening} e5 {A solid response}
 2. Nf3 {Developing the knight toward the center} Nc6
 ```
+````
 
 ### Start at a Specific Move
 
+````
 ```chessview
 [move: 15]
 [Event "My Game"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ...
 ```
+````
 
 ### Puzzle with Hints and Themes
 
+````
 ```chessview
 [puzzle]
 [rating: 2100]
@@ -181,6 +202,7 @@ PGN standard NAGs:
 
 1. Bxf7+ Kh8 2. Ng5
 ```
+````
 
 ## Marker Reference
 
