@@ -473,17 +473,8 @@ export class BoardManager {
   }
 
   applyPieceSet(): void {
-    const set = this.settings.pieceSet;
-    this.container.dataset.pieceSet = set;
-
-    if (set === 'cburnett') return;
-
-    const adapter = (window as any).app?.vault?.adapter;
-    if (!adapter || typeof adapter.getResourcePath !== 'function') return;
-
-    const pluginBase = '.obsidian/plugins/chessview';
-    const basePath = `${pluginBase}/assets/pieces/${set}`;
-    this.applyPieceImages(basePath, adapter);
+    this.container.dataset.pieceSet = this.settings.pieceSet;
+    // Everything is now handled by CSS
   }
 
   private generateBoardSvg(light: string, dark: string): string {
@@ -496,37 +487,6 @@ export class BoardManager {
       }
     }
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" shape-rendering="crispEdges"><rect width="8" height="8" fill="${light}"/><g fill="${dark}">${darkSquares.join('')}</g></svg>`;
-  }
-
-  private applyPieceImages(
-    basePath: string,
-    adapter: { getResourcePath: (path: string) => string }
-  ): void {
-    const pieces = [
-      { css: 'piece.white.king', file: 'wK' },
-      { css: 'piece.white.queen', file: 'wQ' },
-      { css: 'piece.white.rook', file: 'wR' },
-      { css: 'piece.white.bishop', file: 'wB' },
-      { css: 'piece.white.knight', file: 'wN' },
-      { css: 'piece.white.pawn', file: 'wP' },
-      { css: 'piece.black.king', file: 'bK' },
-      { css: 'piece.black.queen', file: 'bQ' },
-      { css: 'piece.black.rook', file: 'bR' },
-      { css: 'piece.black.bishop', file: 'bB' },
-      { css: 'piece.black.knight', file: 'bN' },
-      { css: 'piece.black.pawn', file: 'bP' }
-    ];
-
-    const existingStyle = this.container.querySelector('.cv-piece-style');
-    if (existingStyle) existingStyle.remove();
-
-    const rules = pieces.map((p) => {
-      const resolvedUrl = adapter.getResourcePath(`${basePath}/${p.file}.svg`);
-      return `.chessview[data-piece-set='${this.settings.pieceSet}'] .cg-wrap ${p.css} { background-image: url('${resolvedUrl}') !important; }`;
-    });
-
-    const styleEl = this.container.createEl('style', { cls: 'cv-piece-style' });
-    styleEl.textContent = rules.join('\n');
   }
 
   // ===========================================================================

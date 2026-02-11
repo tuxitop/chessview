@@ -10,8 +10,9 @@
     },
     "main": "main.js",
     "scripts": {
-        "dev": "node esbuild.config.mjs",
-        "build": "node esbuild.config.mjs production"
+        "embed-pieces": "node scripts/embed-pieces.mjs",
+        "dev": "npm run embed-pieces && node esbuild.config.mjs",
+        "build": "npm run embed-pieces && node esbuild.config.mjs production"
     },
     "devDependencies": {
         "@types/node": "^20.10.0",
