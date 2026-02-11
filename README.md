@@ -35,8 +35,7 @@ An interactive chess board plugin for [Obsidian](https://obsidian.md). Render ga
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/tuxitop/chessview/releases)
 2. Create a folder `.obsidian/plugins/chessview/` in your vault
 3. Copy the three files into that folder
-4. Copy the `assets/` folder into that folder (needed for additional piece sets)
-5. Restart Obsidian and enable the plugin in **Settings** → **Community Plugins**
+4. Restart Obsidian and enable the plugin in **Settings** → **Community Plugins**
 
 ## Usage
 
