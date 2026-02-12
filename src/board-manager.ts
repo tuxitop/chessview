@@ -378,14 +378,8 @@ export class BoardManager {
   }
 
   updateNagHighlight(moves: MoveData[], currentMoveIndex: number): void {
-    if (!this.boardEl) return;
-
-    // Remove old NAG highlight classes from ALL squares (not just last-move)
-    const allSquares = this.boardEl.querySelectorAll('cg-board square');
-    allSquares.forEach((sq) => {
-      const el = sq as HTMLElement;
-      el.className = el.className.replace(/\s*nag-highlight-\S+/g, '');
-    });
+    // Clear previous highlight
+    delete this.container.dataset.nagHighlight;
 
     if (currentMoveIndex <= 0) return;
 
@@ -395,20 +389,8 @@ export class BoardManager {
     const nagClass = NAG_CLASSES[move.nag];
     if (!nagClass) return;
 
-    const highlightClass = `nag-highlight-${nagClass.replace('nag-', '')}`;
-
-    // Use a MutationObserver-friendly approach: wait for chessground to update
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!this.boardEl) return;
-        const squares = this.boardEl.querySelectorAll(
-          'cg-board square.last-move'
-        );
-        squares?.forEach((sq) => {
-          sq.classList.add(highlightClass);
-        });
-      });
-    });
+    const highlightName = nagClass.replace('nag-', '');
+    this.container.dataset.nagHighlight = highlightName;
   }
 
   // ===========================================================================
@@ -571,6 +553,8 @@ export class BoardManager {
   // ===========================================================================
 
   destroy(): void {
+    delete this.container.dataset.nagHighlight;
+
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
