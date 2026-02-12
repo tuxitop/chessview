@@ -252,7 +252,7 @@ Access via **Settings** → **Community Plugins** → **ChessView** → ⚙️
 
 ## Compatibility
 
-- **Obsidian** — v1.0.0 and above
+- **Obsidian** — v1.1.9 and above
 - **Platforms** — Desktop (Windows, macOS, Linux) and Mobile (iOS, Android)
 - **Themes** — Works with both light and dark themes
 
