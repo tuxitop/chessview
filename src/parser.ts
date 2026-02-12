@@ -304,7 +304,7 @@ export function parseMovesFromPgn(
   if (startFen) {
     try {
       chess.load(normalizeFen(startFen));
-    } catch (_e) {
+    } catch {
       return moves;
     }
   }
@@ -391,7 +391,7 @@ export function parseMovesFromPgn(
           pendingAnnotation = undefined;
           pendingNag = undefined;
         }
-      } catch (_e) {
+      } catch {
         if (warnings) {
           warnings.push(
             `Skipped invalid move "${moveStr}" after ${moves.length} moves`
@@ -490,10 +490,10 @@ export function validateFen(fen: string): { valid: boolean; error?: string } {
       return { valid: false, error: 'Invalid FEN position' };
     }
     return { valid: true };
-  } catch (e) {
+  } catch (err) {
     return {
       valid: false,
-      error: e instanceof Error ? e.message : 'Invalid FEN'
+      error: err instanceof Error ? err.message : 'Invalid FEN'
     };
   }
 }

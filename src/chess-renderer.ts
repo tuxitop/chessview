@@ -95,8 +95,9 @@ export class ChessRenderer {
     if (this.data.fen) {
       try {
         this.chess.load(this.data.fen);
-      } catch (_e) {
-        // already validated
+      } catch {
+        // FEN was already validated during parsing; load failure here
+        // is non-fatal since the board will show the default position.
       }
     }
 
@@ -325,8 +326,6 @@ export class ChessRenderer {
   // ===========================================================================
   // CLIPBOARD
   // ===========================================================================
-
-  // src/chess-renderer.ts — replace the copyToClipboard method
 
   private async copyToClipboard(): Promise<void> {
     let text: string;

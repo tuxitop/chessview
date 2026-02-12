@@ -120,8 +120,8 @@ export class PuzzleController {
         });
         this.moveIndex++;
       }
-    } catch (e) {
-      console.warn('Could not play opponent move:', expectedMove.san);
+    } catch (err) {
+      console.warn('Puzzle: could not play opponent move:', expectedMove.san, err);
     }
 
     this.board.syncPuzzleBoard(this.chess, this.playedMoves);
@@ -200,7 +200,7 @@ export class PuzzleController {
         this.updateStatus();
         this.renderMoveList();
       }
-    } catch (e) {
+    } catch {
       this.board.syncPuzzleBoard(this.chess, this.playedMoves);
     } finally {
       this.isPromoting = false;

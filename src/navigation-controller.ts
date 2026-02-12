@@ -127,7 +127,7 @@ export class NavigationController {
     for (let i = 0; i < index; i++) {
       try {
         this.chess.move(this.moves[i].san);
-      } catch (e) {
+      } catch {
         index = i;
         break;
       }
@@ -259,7 +259,7 @@ export class NavigationController {
       this.board.updateNagOverlay(this.moves, this.currentMoveIndex);
       this.board.updateNagHighlight(this.moves, this.currentMoveIndex);
       this.updateBranchIndicator();
-    } catch (e) {
+    } catch {
       this.board.syncBoard(this.chess, null);
     } finally {
       this.isPromoting = false;
