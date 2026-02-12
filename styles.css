@@ -278,6 +278,18 @@ cg-board piece.fading {
 .chessview {
   --cv-light: #f0d9b5;
   --cv-dark: #b58863;
+
+  /* NAG classification colors */
+  --cv-nag-brilliant: #1baca6;
+  --cv-nag-good: #5b8c3e;
+  --cv-nag-interesting: #e69d00;
+  --cv-nag-dubious: #cf8f00;
+  --cv-nag-mistake: #e6912c;
+  --cv-nag-blunder: #ca3431;
+  --cv-nag-miss: #ca3431;
+  --cv-nag-neutral: #888;
+  --cv-nag-positional: #4a90d9;
+
   margin: 1em 0;
 }
 
@@ -465,80 +477,42 @@ cg-board piece.fading {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-.cv-nag-glyph.nag-brilliant .cv-nag-glyph-inner {
-  background: #1baca6;
-}
-.cv-nag-glyph.nag-good .cv-nag-glyph-inner {
-  background: #5b8c3e;
-}
-.cv-nag-glyph.nag-interesting .cv-nag-glyph-inner {
-  background: #e69d00;
-}
-.cv-nag-glyph.nag-dubious .cv-nag-glyph-inner {
-  background: #cf8f00;
-}
-.cv-nag-glyph.nag-mistake .cv-nag-glyph-inner {
-  background: #e6912c;
-}
-.cv-nag-glyph.nag-blunder .cv-nag-glyph-inner {
-  background: #ca3431;
-}
-.cv-nag-glyph.nag-miss .cv-nag-glyph-inner {
-  background: #ca3431;
-}
+/* NAG glyph overlay on board */
+.cv-nag-glyph.nag-brilliant .cv-nag-glyph-inner { background: var(--cv-nag-brilliant); }
+.cv-nag-glyph.nag-good .cv-nag-glyph-inner { background: var(--cv-nag-good); }
+.cv-nag-glyph.nag-interesting .cv-nag-glyph-inner { background: var(--cv-nag-interesting); }
+.cv-nag-glyph.nag-dubious .cv-nag-glyph-inner { background: var(--cv-nag-dubious); }
+.cv-nag-glyph.nag-mistake .cv-nag-glyph-inner { background: var(--cv-nag-mistake); }
+.cv-nag-glyph.nag-blunder .cv-nag-glyph-inner { background: var(--cv-nag-blunder); }
+.cv-nag-glyph.nag-miss .cv-nag-glyph-inner { background: var(--cv-nag-miss); }
 .cv-nag-glyph.nag-forced .cv-nag-glyph-inner,
 .cv-nag-glyph.nag-equal .cv-nag-glyph-inner,
-.cv-nag-glyph.nag-unclear .cv-nag-glyph-inner {
-  background: #888;
-}
+.cv-nag-glyph.nag-unclear .cv-nag-glyph-inner { background: var(--cv-nag-neutral); }
 .cv-nag-glyph.nag-white-slight .cv-nag-glyph-inner,
 .cv-nag-glyph.nag-white-better .cv-nag-glyph-inner,
-.cv-nag-glyph.nag-white-winning .cv-nag-glyph-inner {
-  background: #4a90d9;
-}
+.cv-nag-glyph.nag-white-winning .cv-nag-glyph-inner { background: var(--cv-nag-positional); }
 .cv-nag-glyph.nag-black-slight .cv-nag-glyph-inner,
 .cv-nag-glyph.nag-black-better .cv-nag-glyph-inner,
-.cv-nag-glyph.nag-black-winning .cv-nag-glyph-inner {
-  background: #4a90d9;
-}
+.cv-nag-glyph.nag-black-winning .cv-nag-glyph-inner { background: var(--cv-nag-positional); }
 
-/* NAG-colored last move highlights — use data attribute set by JS */
-.chessview[data-nag-highlight='brilliant'] cg-board square.last-move {
-  background-color: rgba(27, 172, 166, 0.35) !important;
-}
-.chessview[data-nag-highlight='good'] cg-board square.last-move {
-  background-color: rgba(91, 140, 62, 0.35) !important;
-}
-.chessview[data-nag-highlight='interesting'] cg-board square.last-move {
-  background-color: rgba(230, 157, 0, 0.3) !important;
-}
-.chessview[data-nag-highlight='dubious'] cg-board square.last-move {
-  background-color: rgba(207, 143, 0, 0.3) !important;
-}
-.chessview[data-nag-highlight='mistake'] cg-board square.last-move {
-  background-color: rgba(230, 145, 44, 0.35) !important;
-}
-.chessview[data-nag-highlight='blunder'] cg-board square.last-move {
-  background-color: rgba(202, 52, 49, 0.35) !important;
-}
-.chessview[data-nag-highlight='miss'] cg-board square.last-move {
-  background-color: rgba(202, 52, 49, 0.35) !important;
-}
+/* NAG-colored last move highlights */
+.chessview[data-nag-highlight='brilliant'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-brilliant) 35%, transparent) !important; }
+.chessview[data-nag-highlight='good'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-good) 35%, transparent) !important; }
+.chessview[data-nag-highlight='interesting'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-interesting) 30%, transparent) !important; }
+.chessview[data-nag-highlight='dubious'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-dubious) 30%, transparent) !important; }
+.chessview[data-nag-highlight='mistake'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-mistake) 35%, transparent) !important; }
+.chessview[data-nag-highlight='blunder'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-blunder) 35%, transparent) !important; }
+.chessview[data-nag-highlight='miss'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-miss) 35%, transparent) !important; }
 .chessview[data-nag-highlight='forced'] cg-board square.last-move,
 .chessview[data-nag-highlight='equal'] cg-board square.last-move,
-.chessview[data-nag-highlight='unclear'] cg-board square.last-move {
-  background-color: rgba(136, 136, 136, 0.3) !important;
-}
+.chessview[data-nag-highlight='unclear'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-neutral) 30%, transparent) !important; }
 .chessview[data-nag-highlight='white-slight'] cg-board square.last-move,
 .chessview[data-nag-highlight='white-better'] cg-board square.last-move,
-.chessview[data-nag-highlight='white-winning'] cg-board square.last-move {
-  background-color: rgba(74, 144, 217, 0.3) !important;
-}
+.chessview[data-nag-highlight='white-winning'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-positional) 30%, transparent) !important; }
 .chessview[data-nag-highlight='black-slight'] cg-board square.last-move,
 .chessview[data-nag-highlight='black-better'] cg-board square.last-move,
-.chessview[data-nag-highlight='black-winning'] cg-board square.last-move {
-  background-color: rgba(74, 144, 217, 0.3) !important;
-}
+.chessview[data-nag-highlight='black-winning'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-positional) 30%, transparent) !important; }
+
 
 /* ============================================================================
    MOVES SECTION
@@ -641,32 +615,16 @@ cg-board piece.fading {
   line-height: 1;
 }
 
-.cv-move-nag.nag-brilliant {
-  color: #1baca6;
-}
-.cv-move-nag.nag-good {
-  color: #5b8c3e;
-}
-.cv-move-nag.nag-interesting {
-  color: #e69d00;
-}
-.cv-move-nag.nag-dubious {
-  color: #cf8f00;
-}
-.cv-move-nag.nag-mistake {
-  color: #e6912c;
-}
-.cv-move-nag.nag-blunder {
-  color: #ca3431;
-}
-.cv-move-nag.nag-miss {
-  color: #ca3431;
-}
+.cv-move-nag.nag-brilliant { color: var(--cv-nag-brilliant); }
+.cv-move-nag.nag-good { color: var(--cv-nag-good); }
+.cv-move-nag.nag-interesting { color: var(--cv-nag-interesting); }
+.cv-move-nag.nag-dubious { color: var(--cv-nag-dubious); }
+.cv-move-nag.nag-mistake { color: var(--cv-nag-mistake); }
+.cv-move-nag.nag-blunder { color: var(--cv-nag-blunder); }
+.cv-move-nag.nag-miss { color: var(--cv-nag-miss); }
 .cv-move-nag.nag-forced,
 .cv-move-nag.nag-equal,
-.cv-move-nag.nag-unclear {
-  color: #888;
-}
+.cv-move-nag.nag-unclear { color: var(--cv-nag-neutral); }
 
 .cv-move.has-comment {
   text-decoration: underline;
@@ -716,42 +674,23 @@ cg-board piece.fading {
   line-height: 1.6;
 }
 
-.cv-comment-nag.nag-brilliant {
-  background: #1baca6;
-}
-.cv-comment-nag.nag-good {
-  background: #5b8c3e;
-}
-.cv-comment-nag.nag-interesting {
-  background: #e69d00;
-}
-.cv-comment-nag.nag-dubious {
-  background: #cf8f00;
-}
-.cv-comment-nag.nag-mistake {
-  background: #e6912c;
-}
-.cv-comment-nag.nag-blunder {
-  background: #ca3431;
-}
-.cv-comment-nag.nag-miss {
-  background: #ca3431;
-}
+/* NAG label in comment area */
+.cv-comment-nag.nag-brilliant { background: var(--cv-nag-brilliant); }
+.cv-comment-nag.nag-good { background: var(--cv-nag-good); }
+.cv-comment-nag.nag-interesting { background: var(--cv-nag-interesting); }
+.cv-comment-nag.nag-dubious { background: var(--cv-nag-dubious); }
+.cv-comment-nag.nag-mistake { background: var(--cv-nag-mistake); }
+.cv-comment-nag.nag-blunder { background: var(--cv-nag-blunder); }
+.cv-comment-nag.nag-miss { background: var(--cv-nag-miss); }
 .cv-comment-nag.nag-forced,
 .cv-comment-nag.nag-equal,
-.cv-comment-nag.nag-unclear {
-  background: #888;
-}
+.cv-comment-nag.nag-unclear { background: var(--cv-nag-neutral); }
 .cv-comment-nag.nag-white-slight,
 .cv-comment-nag.nag-white-better,
-.cv-comment-nag.nag-white-winning {
-  background: #4a90d9;
-}
+.cv-comment-nag.nag-white-winning { background: var(--cv-nag-positional); }
 .cv-comment-nag.nag-black-slight,
 .cv-comment-nag.nag-black-better,
-.cv-comment-nag.nag-black-winning {
-  background: #4a90d9;
-}
+.cv-comment-nag.nag-black-winning { background: var(--cv-nag-positional); }
 
 /* ============================================================================
    BRANCH OVERLAY
