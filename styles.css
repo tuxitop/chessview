@@ -925,6 +925,12 @@ cg-board piece.fading {
   border-color: var(--interactive-success);
 }
 
+.cv-action-btn.copy-failed {
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+  border-color: var(--text-error);
+}
+
 .cv-action-link {
   font-size: 12px;
   color: var(--text-accent);

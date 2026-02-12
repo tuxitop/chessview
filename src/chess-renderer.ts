@@ -326,6 +326,8 @@ export class ChessRenderer {
   // CLIPBOARD
   // ===========================================================================
 
+  // src/chess-renderer.ts — replace the copyToClipboard method
+
   private async copyToClipboard(): Promise<void> {
     let text: string;
 
@@ -333,7 +335,7 @@ export class ChessRenderer {
       const movesText = this.data.solutionMoves
         .map((m, i) => {
           const str =
-            i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ${m.san}` : m.san;
+          i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ${m.san}` : m.san;
           return str;
         })
         .join(' ');
@@ -349,15 +351,20 @@ export class ChessRenderer {
       text = this.chess.fen();
     }
 
+    const btn = this.container.querySelector('.cv-action-btn');
+
     try {
       await navigator.clipboard.writeText(text);
-      const btn = this.container.querySelector('.cv-action-btn');
       if (btn) {
         btn.addClass('copied');
         setTimeout(() => btn.removeClass('copied'), 1000);
       }
-    } catch (e) {
-      console.error('Copy failed:', e);
+    } catch {
+    // clipboard API can fail in non-secure contexts or restricted environments
+      if (btn) {
+        btn.addClass('copy-failed');
+        setTimeout(() => btn.removeClass('copy-failed'), 2000);
+      }
     }
   }
 
