@@ -11,7 +11,7 @@ import {
   NAG_CLASSES
 } from './types';
 import { BoardManager } from './board-manager';
-import { getValidMoves, isInCheck } from './utils';
+import { getValidMoves } from './utils';
 
 interface BranchPoint {
   moveIndex: number;
@@ -38,6 +38,9 @@ export class NavigationController {
   // Autoplay state
   private isPlaying: boolean = false;
   private playInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Promotion lock
+  private isPromoting: boolean = false;
 
   // DOM
   private moveListEl: HTMLElement | null = null;
@@ -95,12 +98,20 @@ export class NavigationController {
     this.playBtnEl = el;
   }
 
+  // ===========================================================================
+  // PUBLIC GETTERS
+  // ===========================================================================
+
   get moveCount(): number {
     return this.moves.length;
   }
 
   get currentIndex(): number {
     return this.currentMoveIndex;
+  }
+
+  get currentMoves(): readonly MoveData[] {
+    return this.moves;
   }
 
   // ===========================================================================
@@ -117,6 +128,7 @@ export class NavigationController {
       try {
         this.chess.move(this.moves[i].san);
       } catch (e) {
+        index = i;
         break;
       }
     }
@@ -129,14 +141,14 @@ export class NavigationController {
     this.board.syncBoard(this.chess, last, {
       movable: isEditable
         ? {
-            free: false,
-            color: 'both' as Color,
-            dests: getValidMoves(this.chess),
-            showDests: true,
-            events: {
-              after: (orig: Key, dest: Key) => this.handleUserMove(orig, dest)
-            }
+          free: false,
+          color: 'both' as Color,
+          dests: getValidMoves(this.chess),
+          showDests: true,
+          events: {
+            after: (orig: Key, dest: Key) => this.handleUserMove(orig, dest)
           }
+        }
         : { free: false, color: undefined },
       moves: this.moves,
       currentMoveIndex: this.currentMoveIndex
@@ -177,14 +189,20 @@ export class NavigationController {
   // ===========================================================================
 
   async handleUserMove(orig: Key, dest: Key): Promise<void> {
-    if (this.destroyed) return;
+    if (this.destroyed || this.isPromoting) return;
 
-    // Get promotion piece via dialog if needed
-    const promotion = await this.board.getPromotion(this.chess, orig, dest);
+    // Lock to prevent concurrent promotion dialogs
+    this.isPromoting = true;
+    this.stopAutoPlay();
 
     try {
+      const promotion = await this.board.getPromotion(this.chess, orig, dest);
+
       const move = this.chess.move({ from: orig, to: dest, promotion });
-      if (!move) return;
+      if (!move) {
+        this.board.syncBoard(this.chess, null);
+        return;
+      }
 
       if (
         this.currentMoveIndex < this.mainLineMoves.length &&
@@ -243,6 +261,8 @@ export class NavigationController {
       this.updateBranchIndicator();
     } catch (e) {
       this.board.syncBoard(this.chess, null);
+    } finally {
+      this.isPromoting = false;
     }
   }
 

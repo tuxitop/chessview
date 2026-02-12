@@ -2,7 +2,7 @@
 import { Chess } from 'chess.js';
 import { Key } from 'chessground/types';
 
-import { ChessViewSettings, ParsedChessData, MoveData } from './types';
+import { ChessViewSettings, ParsedChessData } from './types';
 import { generateAnalysisUrls } from './parser';
 import { BoardManager } from './board-manager';
 import { PuzzleController } from './puzzle-controller';
@@ -95,7 +95,7 @@ export class ChessRenderer {
     if (this.data.fen) {
       try {
         this.chess.load(this.data.fen);
-      } catch (e) {
+      } catch (_e) {
         // already validated
       }
     }
@@ -278,7 +278,8 @@ export class ChessRenderer {
       this.isFlipped = !this.isFlipped;
       this.board?.flipBoard();
       if (this.nav) {
-        this.board?.updateNagOverlay([], this.nav.currentIndex);
+        const moves = [...this.nav.currentMoves];
+        this.board?.updateNagOverlay(moves, this.nav.currentIndex);
       }
     });
 
@@ -382,32 +383,36 @@ export class ChessRenderer {
       if (!this.nav) return;
 
       switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault();
-          this.nav.goBack();
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          this.nav.goForward();
-          break;
-        case 'Home':
-          e.preventDefault();
-          this.nav.goToStart();
-          break;
-        case 'End':
-          e.preventDefault();
-          this.nav.goToEnd();
-          break;
-        case ' ':
-          e.preventDefault();
-          this.nav.toggleAutoPlay();
-          break;
-        case 'f':
-        case 'F':
-          e.preventDefault();
-          this.isFlipped = !this.isFlipped;
-          this.board?.flipBoard();
-          break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        this.nav.goBack();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        this.nav.goForward();
+        break;
+      case 'Home':
+        e.preventDefault();
+        this.nav.goToStart();
+        break;
+      case 'End':
+        e.preventDefault();
+        this.nav.goToEnd();
+        break;
+      case ' ':
+        e.preventDefault();
+        this.nav.toggleAutoPlay();
+        break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        this.isFlipped = !this.isFlipped;
+        this.board?.flipBoard();
+        if (this.nav) {
+          const moves = [...this.nav.currentMoves];
+          this.board?.updateNagOverlay(moves, this.nav.currentIndex);
+        }
+        break;
       }
     };
 
