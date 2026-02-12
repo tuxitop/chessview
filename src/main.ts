@@ -38,30 +38,30 @@ export default class ChessViewPlugin extends Plugin {
     this.addSettingTab(new ChessViewSettingTab(this.app, this));
 
     this.addCommand({
-      id: 'insert-chessviewer-game',
+      id: 'insert-chessview-game',
       name: 'Insert game',
       editorCallback: (editor) => {
         editor.replaceSelection(
-          '```chessviewer\n[Event "?"]\n[White "?"]\n[Black "?"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bb5\n```'
+          '```chessview\n[Event "?"]\n[White "?"]\n[Black "?"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bb5\n```'
         );
       }
     });
 
     this.addCommand({
-      id: 'insert-chessviewer-fen',
+      id: 'insert-chessview-fen',
       name: 'Insert position (FEN)',
       editorCallback: (editor) => {
         editor.replaceSelection(
-          '```chessviewer\nrnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1\n```'
+          '```chessview\nrnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1\n```'
         );
       }
     });
 
     this.addCommand({
-      id: 'insert-chessviewer-puzzle',
+      id: 'insert-chessview-puzzle',
       name: 'Insert puzzle',
       editorCallback: (editor) => {
-        editor.replaceSelection(`\`\`\`chessviewer
+        editor.replaceSelection(`\`\`\`chessview
 [puzzle]
 [rating: 1500]
 [title: White to move and win]
@@ -72,12 +72,10 @@ export default class ChessViewPlugin extends Plugin {
 \`\`\``);
       }
     });
-
-    console.log('ChessView loaded');
   }
 
   onunload(): void {
-    console.log('ChessView unloaded');
+    // plugin cleanup
   }
 
   async loadSettings(): Promise<void> {
