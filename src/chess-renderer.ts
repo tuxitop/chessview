@@ -2,7 +2,12 @@
 import { Chess } from 'chess.js';
 import { Key } from 'chessground/types';
 
-import { ChessViewSettings, ParsedChessData, COPY_FEEDBACK_DURATION, COPY_FAILURE_DURATION } from './types';
+import {
+  ChessViewSettings,
+  ParsedChessData,
+  COPY_FEEDBACK_DURATION,
+  COPY_FAILURE_DURATION
+} from './types';
 import { generateAnalysisUrls } from './parser';
 import { BoardManager } from './board-manager';
 import { PuzzleController } from './puzzle-controller';
@@ -334,7 +339,7 @@ export class ChessRenderer {
       const movesText = this.data.solutionMoves
         .map((m, i) => {
           const str =
-          i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ${m.san}` : m.san;
+            i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ${m.san}` : m.san;
           return str;
         })
         .join(' ');
@@ -359,7 +364,7 @@ export class ChessRenderer {
         setTimeout(() => btn.removeClass('copied'), COPY_FEEDBACK_DURATION);
       }
     } catch {
-    // clipboard API can fail in non-secure contexts or restricted environments
+      // clipboard API can fail in non-secure contexts or restricted environments
       if (btn) {
         btn.addClass('copy-failed');
         setTimeout(() => btn.removeClass('copy-failed'), COPY_FAILURE_DURATION);
