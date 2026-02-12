@@ -49,17 +49,18 @@ export function squareToPosition(
   isFlipped: boolean
 ): { x: number; y: number } | null {
   if (square.length !== 2) return null;
-  const file = square.charCodeAt(0) - 97;
+  const file = square.charCodeAt(0) - 97; // 'a' = 0
   const rank = parseInt(square[1]) - 1;
   if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
 
+  const SQUARE_PERCENT = 12.5; // 100% / 8 squares
   let x: number, y: number;
   if (isFlipped) {
-    x = (7 - file) * 12.5;
-    y = rank * 12.5;
+    x = (7 - file) * SQUARE_PERCENT;
+    y = rank * SQUARE_PERCENT;
   } else {
-    x = file * 12.5;
-    y = (7 - rank) * 12.5;
+    x = file * SQUARE_PERCENT;
+    y = (7 - rank) * SQUARE_PERCENT;
   }
   return { x, y };
 }
@@ -67,11 +68,29 @@ export function squareToPosition(
 /**
  * Strip nested variations (parenthesized text) using stack-based parsing.
  * Handles arbitrarily nested variations like (1. e4 (1... d5) d6).
+ * Correctly ignores parentheses inside PGN comments { }.
  */
 export function stripVariations(text: string): string {
   let result = '';
   let depth = 0;
+  let inComment = false;
+
   for (const ch of text) {
+    if (ch === '{' && depth === 0) {
+      inComment = true;
+      result += ch;
+      continue;
+    }
+    if (ch === '}' && inComment) {
+      inComment = false;
+      result += ch;
+      continue;
+    }
+    if (inComment) {
+      result += ch;
+      continue;
+    }
+
     if (ch === '(') {
       depth++;
     } else if (ch === ')') {
