@@ -1,5 +1,5 @@
 // src/board-manager.ts
-import { Chess } from 'chess.js';
+import { Chess, ChessMove } from 'chess.js';
 import { Chessground } from 'chessground';
 import { Api } from 'chessground/api';
 import { Config } from 'chessground/config';
@@ -257,7 +257,7 @@ export class BoardManager {
 
   getAutoShapes(
     moves: MoveData[] | null,
-    currentMoveIndex: number,
+    currentMoveIndex: number
   ): BoardShape[] {
     const shapes: BoardShape[] = [];
     const defaultArrowColor = this.settings.arrowColor || 'green';
@@ -284,9 +284,9 @@ export class BoardManager {
 
     if (
       !this.data.isPuzzle &&
-    moves &&
-    currentMoveIndex > 0 &&
-    moves[currentMoveIndex - 1]?.annotations
+      moves &&
+      currentMoveIndex > 0 &&
+      moves[currentMoveIndex - 1]?.annotations
     ) {
       const ann = moves[currentMoveIndex - 1].annotations!;
       for (const arrow of ann.arrows) {
@@ -334,9 +334,7 @@ export class BoardManager {
 
     setTimeout(() => {
       if (this.ground) {
-        this.ground.setAutoShapes(
-          this.getAutoShapes(moves, currentMoveIndex)
-        );
+        this.ground.setAutoShapes(this.getAutoShapes(moves, currentMoveIndex));
       }
     }, durationMs);
   }
@@ -430,12 +428,12 @@ export class BoardManager {
   applyTheme(): void {
     const theme = this.settings.boardTheme;
     const colors =
-    theme === 'custom'
-      ? {
-        light: this.settings.lightSquareColor,
-        dark: this.settings.darkSquareColor
-      }
-      : BOARD_THEMES[theme] ?? BOARD_THEMES['brown'];
+      theme === 'custom'
+        ? {
+          light: this.settings.lightSquareColor,
+          dark: this.settings.darkSquareColor
+        }
+        : (BOARD_THEMES[theme] ?? BOARD_THEMES['brown']);
 
     this.container.style.setProperty('--cv-light', colors.light);
     this.container.style.setProperty('--cv-dark', colors.dark);
@@ -480,12 +478,7 @@ export class BoardManager {
    * Returns the chosen promotion piece letter, or 'q' for non-promotions.
    */
   async getPromotion(chess: Chess, orig: Key, dest: Key): Promise<string> {
-    const validMoves = chess.moves({ verbose: true }) as Array<{
-      from: string;
-      to: string;
-      flags: string;
-      promotion?: string;
-    }>;
+    const validMoves = chess.moves({ verbose: true }) as ChessMove[];
 
     const isPromotion = validMoves.some(
       (m) => m.from === orig && m.to === dest && m.flags.includes('p')
