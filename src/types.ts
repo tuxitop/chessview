@@ -128,6 +128,7 @@ export interface ParsedChessData {
   highlights: Highlight[];
   startMove: number;
   error: string | null;
+  warnings: string[];
 }
 
 export interface Arrow {
@@ -233,34 +234,4 @@ export const ANNOTATION_COLORS: Record<string, string> = {
   yellow: 'yellow',
   orange: 'orange',
   purple: 'purple'
-};
-
-export const UNICODE_PIECES: Record<string, string> = {
-  wK: '♔',
-  wQ: '♕',
-  wR: '♖',
-  wB: '♗',
-  wN: '♘',
-  wP: '♙',
-  bK: '♚',
-  bQ: '♛',
-  bR: '♜',
-  bB: '♝',
-  bN: '♞',
-  bP: '♟'
-};
-
-export const LETTER_PIECES: Record<string, string> = {
-  wK: 'K',
-  wQ: 'Q',
-  wR: 'R',
-  wB: 'B',
-  wN: 'N',
-  wP: 'P',
-  bK: 'K',
-  bQ: 'Q',
-  bR: 'R',
-  bB: 'B',
-  bN: 'N',
-  bP: 'P'
 };

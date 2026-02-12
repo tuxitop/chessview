@@ -3,9 +3,6 @@ import { stripVariations } from './utils';
 import {
   ParsedChessData,
   MoveData,
-  Arrow,
-  Circle,
-  Highlight,
   MoveAnnotation,
   ANNOTATION_COLORS,
   NAG_SYMBOLS
@@ -33,7 +30,8 @@ export function parseChessInput(source: string): ParsedChessData {
     circles: [],
     highlights: [],
     startMove: 0,
-    error: null
+    error: null,
+    warnings: []
   };
 
   try {
@@ -108,7 +106,7 @@ function parsePuzzle(source: string, result: ParsedChessData): ParsedChessData {
   result.pgn = pgnSection;
 
   // Parse moves
-  result.solutionMoves = parseMovesFromPgn(pgnSection, result.fen);
+  result.solutionMoves = parseMovesFromPgn(pgnSection, result.fen, result.warnings);
 
   if (result.solutionMoves.length === 0) {
     result.error = 'Puzzle has no valid moves';
@@ -210,7 +208,7 @@ function parseGame(source: string, result: ParsedChessData): ParsedChessData {
       result.headers[match[1]] = match[2];
     }
 
-    result.moves = parseMovesFromPgn(chessData, result.fen);
+    result.moves = parseMovesFromPgn(chessData, result.fen, result.warnings);
   }
 
   return result;
@@ -227,18 +225,18 @@ function parseMarkerLine(line: string, result: ParsedChessData): void {
     const value = kvMatch[2].trim();
 
     switch (key) {
-      case 'rating':
-        result.puzzleRating = parseInt(value) || null;
-        break;
-      case 'themes':
-        result.puzzleThemes = value.split(/[,\s]+/).filter((t) => t);
-        break;
-      case 'title':
-        result.puzzleTitle = value;
-        break;
-      case 'move':
-        result.startMove = parseInt(value) || 0;
-        break;
+    case 'rating':
+      result.puzzleRating = parseInt(value) || null;
+      break;
+    case 'themes':
+      result.puzzleThemes = value.split(/[,\s]+/).filter((t) => t);
+      break;
+    case 'title':
+      result.puzzleTitle = value;
+      break;
+    case 'move':
+      result.startMove = parseInt(value) || 0;
+      break;
     }
   }
 
@@ -297,7 +295,8 @@ function parseAnnotationMarker(marker: string, result: ParsedChessData): void {
 
 export function parseMovesFromPgn(
   pgn: string,
-  startFen: string | null
+  startFen: string | null,
+  warnings?: string[]
 ): MoveData[] {
   const chess = new Chess();
   const moves: MoveData[] = [];
@@ -305,7 +304,7 @@ export function parseMovesFromPgn(
   if (startFen) {
     try {
       chess.load(normalizeFen(startFen));
-    } catch (e) {
+    } catch (_e) {
       return moves;
     }
   }
@@ -392,8 +391,12 @@ export function parseMovesFromPgn(
           pendingAnnotation = undefined;
           pendingNag = undefined;
         }
-      } catch (e) {
-        // Skip invalid move
+      } catch (_e) {
+        if (warnings) {
+          warnings.push(
+            `Skipped invalid move "${moveStr}" after ${moves.length} moves`
+          );
+        }
       }
     }
   }
