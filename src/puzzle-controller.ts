@@ -6,12 +6,16 @@ import {
   ParsedChessData,
   MoveData,
   ChessViewSettings,
-  FIGURINE_NOTATION,
-  NAG_CLASSES
+  FIGURINE_NOTATION
 } from './types';
 import { BoardManager } from './board-manager';
 
 export type PuzzleState = 'waiting' | 'playing' | 'solved' | 'failed';
+
+/** Delay before auto-playing the opponent's move (ms) */
+const OPPONENT_MOVE_DELAY = 600;
+/** Delay before playing opponent response after correct player move (ms) */
+const RESPONSE_DELAY = 400;
 
 export class PuzzleController {
   private chess: Chess;
@@ -25,6 +29,7 @@ export class PuzzleController {
   private playedMoves: MoveData[] = [];
   private solutionRevealed: boolean = false;
   private destroyed: boolean = false;
+  private isPromoting: boolean = false;
 
   // DOM
   private moveListEl: HTMLElement | null = null;
@@ -60,7 +65,7 @@ export class PuzzleController {
   }
 
   start(): void {
-    this.state = 'waiting';
+    this.setState('waiting');
     this.moveIndex = 0;
     this.playedMoves = [];
     this.solutionRevealed = false;
@@ -78,12 +83,20 @@ export class PuzzleController {
     if (firstMoveIsOpponent && this.data.solutionMoves.length > 0) {
       setTimeout(() => {
         if (!this.destroyed) this.playOpponentMove();
-      }, 600);
+      }, OPPONENT_MOVE_DELAY);
     } else {
-      this.state = 'playing';
+      this.setState('playing');
       this.enableInput();
       this.updateStatus();
     }
+  }
+
+  // ===========================================================================
+  // STATE MANAGEMENT
+  // ===========================================================================
+
+  private setState(newState: PuzzleState): void {
+    this.state = newState;
   }
 
   // ===========================================================================
@@ -115,26 +128,27 @@ export class PuzzleController {
     this.renderMoveList();
 
     if (this.moveIndex < this.data.solutionMoves.length) {
-      this.state = 'playing';
+      this.setState('playing');
       this.enableInput();
       this.updateStatus();
     } else {
-      this.state = 'solved';
+      this.setState('solved');
       this.board.disableInput();
       this.updateStatus();
     }
   }
 
   async handleMove(orig: Key, dest: Key): Promise<void> {
-    if (this.state !== 'playing') return;
+    if (this.state !== 'playing' || this.isPromoting) return;
     if (this.moveIndex >= this.data.solutionMoves.length) return;
 
     const expected = this.data.solutionMoves[this.moveIndex];
 
-    // Get promotion piece via dialog if needed
-    const promotion = await this.board.getPromotion(this.chess, orig, dest);
+    // Lock to prevent concurrent promotion dialogs
+    this.isPromoting = true;
 
     try {
+      const promotion = await this.board.getPromotion(this.chess, orig, dest);
       const move = this.chess.move({ from: orig, to: dest, promotion });
 
       if (!move) {
@@ -156,22 +170,22 @@ export class PuzzleController {
         this.renderMoveList();
 
         if (this.moveIndex >= this.data.solutionMoves.length) {
-          this.state = 'solved';
+          this.setState('solved');
           this.board.disableInput();
           this.updateStatus();
         } else {
-          this.state = 'waiting';
+          this.setState('waiting');
           this.board.disableInput();
           this.updateStatus();
 
           setTimeout(() => {
             if (!this.destroyed) this.playOpponentMove();
-          }, 400);
+          }, RESPONSE_DELAY);
         }
       } else {
         // Wrong move — undo it
         this.chess.undo();
-        this.state = 'failed';
+        this.setState('failed');
 
         this.playedMoves.push({
           san: move.san,
@@ -188,6 +202,8 @@ export class PuzzleController {
       }
     } catch (e) {
       this.board.syncPuzzleBoard(this.chess, this.playedMoves);
+    } finally {
+      this.isPromoting = false;
     }
   }
 
@@ -246,22 +262,22 @@ export class PuzzleController {
     const playerLabel = this.data.playerColor === 'white' ? 'White' : 'Black';
 
     switch (this.state) {
-      case 'waiting':
-        this.statusEl.addClass('waiting');
-        this.statusEl.textContent = 'Watch...';
-        break;
-      case 'playing':
-        this.statusEl.addClass('playing');
-        this.statusEl.textContent = `${playerLabel} to move — Your turn`;
-        break;
-      case 'solved':
-        this.statusEl.addClass('success');
-        this.statusEl.textContent = '✓ Puzzle solved!';
-        break;
-      case 'failed':
-        this.statusEl.addClass('failed');
-        this.statusEl.textContent = '✗ Incorrect';
-        break;
+    case 'waiting':
+      this.statusEl.addClass('waiting');
+      this.statusEl.textContent = 'Watch...';
+      break;
+    case 'playing':
+      this.statusEl.addClass('playing');
+      this.statusEl.textContent = `${playerLabel} to move — Your turn`;
+      break;
+    case 'solved':
+      this.statusEl.addClass('success');
+      this.statusEl.textContent = '✓ Puzzle solved!';
+      break;
+    case 'failed':
+      this.statusEl.addClass('failed');
+      this.statusEl.textContent = '✗ Incorrect';
+      break;
     }
 
     this.updateButtons();
