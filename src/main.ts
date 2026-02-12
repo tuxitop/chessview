@@ -38,7 +38,7 @@ export default class ChessViewPlugin extends Plugin {
     this.addSettingTab(new ChessViewSettingTab(this.app, this));
 
     this.addCommand({
-      id: 'insert-chessview-game',
+      id: 'insert-game',
       name: 'Insert game',
       editorCallback: (editor) => {
         editor.replaceSelection(
@@ -48,7 +48,7 @@ export default class ChessViewPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: 'insert-chessview-fen',
+      id: 'insert-fen',
       name: 'Insert position (FEN)',
       editorCallback: (editor) => {
         editor.replaceSelection(
@@ -58,7 +58,7 @@ export default class ChessViewPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: 'insert-chessview-puzzle',
+      id: 'insert-puzzle',
       name: 'Insert puzzle',
       editorCallback: (editor) => {
         editor.replaceSelection(`\`\`\`chessview
@@ -72,10 +72,6 @@ export default class ChessViewPlugin extends Plugin {
 \`\`\``);
       }
     });
-  }
-
-  onunload(): void {
-    // plugin cleanup
   }
 
   async loadSettings(): Promise<void> {
