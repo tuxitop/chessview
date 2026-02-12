@@ -6,16 +6,14 @@ import {
   ParsedChessData,
   MoveData,
   ChessViewSettings,
-  FIGURINE_NOTATION
+  FIGURINE_NOTATION,
+  PUZZLE_OPPONENT_FIRST_MOVE_DELAY,
+  PUZZLE_OPPONENT_RESPONSE_DELAY,
+  HINT_HIGHLIGHT_DURATION
 } from './types';
 import { BoardManager } from './board-manager';
 
 export type PuzzleState = 'waiting' | 'playing' | 'solved' | 'failed';
-
-/** Delay before auto-playing the opponent's move (ms) */
-const OPPONENT_MOVE_DELAY = 600;
-/** Delay before playing opponent response after correct player move (ms) */
-const RESPONSE_DELAY = 400;
 
 export class PuzzleController {
   private chess: Chess;
@@ -83,7 +81,7 @@ export class PuzzleController {
     if (firstMoveIsOpponent && this.data.solutionMoves.length > 0) {
       setTimeout(() => {
         if (!this.destroyed) this.playOpponentMove();
-      }, OPPONENT_MOVE_DELAY);
+      }, PUZZLE_OPPONENT_FIRST_MOVE_DELAY);
     } else {
       this.setState('playing');
       this.enableInput();
@@ -180,7 +178,7 @@ export class PuzzleController {
 
           setTimeout(() => {
             if (!this.destroyed) this.playOpponentMove();
-          }, RESPONSE_DELAY);
+          }, PUZZLE_OPPONENT_RESPONSE_DELAY);
         }
       } else {
         // Wrong move — undo it
@@ -246,7 +244,7 @@ export class PuzzleController {
     const fromSquare = nextMove.from;
 
     if (fromSquare) {
-      this.board.showHintHighlight(fromSquare, null, 0, 2000);
+      this.board.showHintHighlight(fromSquare, null, 0, HINT_HIGHLIGHT_DURATION);
     }
   }
 

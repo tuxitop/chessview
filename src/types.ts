@@ -235,3 +235,25 @@ export const ANNOTATION_COLORS: Record<string, string> = {
   orange: 'orange',
   purple: 'purple'
 };
+
+// ============================================================================
+// TIMING CONSTANTS
+// ============================================================================
+
+/** Delay before auto-playing opponent's first move in puzzle mode (ms) */
+export const PUZZLE_OPPONENT_FIRST_MOVE_DELAY = 600;
+
+/** Delay before auto-playing opponent's response in puzzle mode (ms) */
+export const PUZZLE_OPPONENT_RESPONSE_DELAY = 400;
+
+/** Duration of hint highlight on board (ms) */
+export const HINT_HIGHLIGHT_DURATION = 2000;
+
+/** Duration of clipboard copy success indicator (ms) */
+export const COPY_FEEDBACK_DURATION = 1000;
+
+/** Duration of clipboard copy failure indicator (ms) */
+export const COPY_FAILURE_DURATION = 2000;
+
+/** Percentage width of one square on the board */
+export const SQUARE_SIZE_PERCENT = 12.5;

@@ -1,6 +1,8 @@
 // src/utils.ts
 import { Chess } from 'chess.js';
 import { Key } from 'chessground/types';
+import { SQUARE_SIZE_PERCENT } from './types';
+
 
 /**
  * Validate a square string like "e4"
@@ -49,18 +51,17 @@ export function squareToPosition(
   isFlipped: boolean
 ): { x: number; y: number } | null {
   if (square.length !== 2) return null;
-  const file = square.charCodeAt(0) - 97; // 'a' = 0
+  const file = square.charCodeAt(0) - 97;
   const rank = parseInt(square[1]) - 1;
   if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
 
-  const SQUARE_PERCENT = 12.5; // 100% / 8 squares
   let x: number, y: number;
   if (isFlipped) {
-    x = (7 - file) * SQUARE_PERCENT;
-    y = rank * SQUARE_PERCENT;
+    x = (7 - file) * SQUARE_SIZE_PERCENT;
+    y = rank * SQUARE_SIZE_PERCENT;
   } else {
-    x = file * SQUARE_PERCENT;
-    y = (7 - rank) * SQUARE_PERCENT;
+    x = file * SQUARE_SIZE_PERCENT;
+    y = (7 - rank) * SQUARE_SIZE_PERCENT;
   }
   return { x, y };
 }

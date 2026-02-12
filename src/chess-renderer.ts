@@ -2,7 +2,7 @@
 import { Chess } from 'chess.js';
 import { Key } from 'chessground/types';
 
-import { ChessViewSettings, ParsedChessData } from './types';
+import { ChessViewSettings, ParsedChessData, COPY_FEEDBACK_DURATION, COPY_FAILURE_DURATION } from './types';
 import { generateAnalysisUrls } from './parser';
 import { BoardManager } from './board-manager';
 import { PuzzleController } from './puzzle-controller';
@@ -356,13 +356,13 @@ export class ChessRenderer {
       await navigator.clipboard.writeText(text);
       if (btn) {
         btn.addClass('copied');
-        setTimeout(() => btn.removeClass('copied'), 1000);
+        setTimeout(() => btn.removeClass('copied'), COPY_FEEDBACK_DURATION);
       }
     } catch {
     // clipboard API can fail in non-secure contexts or restricted environments
       if (btn) {
         btn.addClass('copy-failed');
-        setTimeout(() => btn.removeClass('copy-failed'), 2000);
+        setTimeout(() => btn.removeClass('copy-failed'), COPY_FAILURE_DURATION);
       }
     }
   }
