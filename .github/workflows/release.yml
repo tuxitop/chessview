@@ -16,29 +16,13 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22.x'
-      - run: npm install -g npm@11.7.0
       - run: npm ci
       - run: npm run build
-      - name: Get version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      - name: Create source archive
-        run: |
-          tar --create --gzip \
-            --exclude='node_modules' \
-            --exclude='main.js' \
-            --exclude='.git' \
-            --exclude='*.map' \
-            --exclude='chessview-source-*.tar.gz' \
-            --file="/tmp/chessview-source-${{ steps.version.outputs.VERSION }}.tar.gz" \
-            .
-          mv "/tmp/chessview-source-${{ steps.version.outputs.VERSION }}.tar.gz" .
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             main.js
             manifest.json
             styles.css
-            chessview-source-${{ steps.version.outputs.VERSION }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
