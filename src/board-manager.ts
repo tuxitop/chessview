@@ -9,8 +9,6 @@ import {
   ChessViewSettings,
   ParsedChessData,
   MoveData,
-  Arrow,
-  Circle,
   BOARD_THEMES,
   NAG_CLASSES
 } from './types';
@@ -20,6 +18,12 @@ import {
   isInCheck,
   squareToPosition
 } from './utils';
+
+interface BoardShape {
+  orig: Key;
+  dest?: Key;
+  brush: string;
+}
 
 export class BoardManager {
   private ground: Api | null = null;
@@ -66,7 +70,6 @@ export class BoardManager {
   ): void {
     if (!this.boardEl) return;
 
-    const turn: Color = chess.turn() === 'w' ? 'white' : 'black';
     const isEditable =
       this.data.isEditable && !this.data.isStatic && !this.data.isPuzzle;
 
@@ -83,18 +86,18 @@ export class BoardManager {
       movable:
         isEditable && onUserMove
           ? {
-              free: false,
-              color: 'both' as Color,
-              dests: getValidMoves(chess),
-              showDests: true,
-              events: { after: onUserMove }
-            }
+            free: false,
+            color: 'both' as Color,
+            dests: getValidMoves(chess),
+            showDests: true,
+            events: { after: onUserMove }
+          }
           : { free: false, color: undefined },
       premovable: { enabled: false },
       drawable: {
         enabled: true,
         visible: true,
-        autoShapes: this.getAutoShapes(null, 0, [])
+        autoShapes: this.getAutoShapes(null, 0)
       }
     };
 
@@ -130,8 +133,7 @@ export class BoardManager {
       drawable: {
         autoShapes: this.getAutoShapes(
           options?.moves ?? null,
-          options?.currentMoveIndex ?? 0,
-          []
+          options?.currentMoveIndex ?? 0
         )
       }
     });
@@ -161,7 +163,7 @@ export class BoardManager {
         dests: getValidMoves(chess)
       },
       drawable: {
-        autoShapes: this.getAutoShapes(moves, currentMoveIndex, [])
+        autoShapes: this.getAutoShapes(moves, currentMoveIndex)
       }
     });
   }
@@ -188,7 +190,7 @@ export class BoardManager {
       turnColor: turn,
       check: inCheck,
       lastMove: showLastMove as [Key, Key] | undefined,
-      drawable: { autoShapes: this.getAutoShapes(null, 0, []) }
+      drawable: { autoShapes: this.getAutoShapes(null, 0) }
     });
   }
 
@@ -256,9 +258,8 @@ export class BoardManager {
   getAutoShapes(
     moves: MoveData[] | null,
     currentMoveIndex: number,
-    _extra: any[]
-  ): any[] {
-    const shapes: any[] = [];
+  ): BoardShape[] {
+    const shapes: BoardShape[] = [];
     const defaultArrowColor = this.settings.arrowColor || 'green';
     const defaultCircleColor = this.settings.circleColor || 'green';
 
@@ -281,12 +282,11 @@ export class BoardManager {
       }
     }
 
-    // Move-specific annotations (non-puzzle)
     if (
       !this.data.isPuzzle &&
-      moves &&
-      currentMoveIndex > 0 &&
-      moves[currentMoveIndex - 1]?.annotations
+    moves &&
+    currentMoveIndex > 0 &&
+    moves[currentMoveIndex - 1]?.annotations
     ) {
       const ann = moves[currentMoveIndex - 1].annotations!;
       for (const arrow of ann.arrows) {
@@ -311,7 +311,7 @@ export class BoardManager {
     return shapes;
   }
 
-  setAutoShapes(shapes: any[]): void {
+  setAutoShapes(shapes: BoardShape[]): void {
     this.ground?.setAutoShapes(shapes);
   }
 
@@ -326,7 +326,7 @@ export class BoardManager {
     durationMs: number
   ): void {
     if (!this.ground) return;
-    const baseShapes = this.getAutoShapes(moves, currentMoveIndex, []);
+    const baseShapes = this.getAutoShapes(moves, currentMoveIndex);
     this.ground.setAutoShapes([
       ...baseShapes,
       { orig: square as Key, brush: 'yellow' }
@@ -335,7 +335,7 @@ export class BoardManager {
     setTimeout(() => {
       if (this.ground) {
         this.ground.setAutoShapes(
-          this.getAutoShapes(moves, currentMoveIndex, [])
+          this.getAutoShapes(moves, currentMoveIndex)
         );
       }
     }, durationMs);
@@ -432,9 +432,9 @@ export class BoardManager {
     const colors =
       theme === 'custom'
         ? {
-            light: this.settings.lightSquareColor,
-            dark: this.settings.darkSquareColor
-          }
+          light: this.settings.lightSquareColor,
+          dark: this.settings.darkSquareColor
+        }
         : BOARD_THEMES[theme];
 
     this.container.style.setProperty('--cv-light', colors.light);
