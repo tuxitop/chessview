@@ -10,14 +10,19 @@
     },
     "main": "main.js",
     "scripts": {
+        "lint": "eslint src/ --ext .ts",
+        "lint:fix": "eslint src/ --ext .ts --fix",
         "embed-pieces": "node scripts/embed-pieces.mjs",
         "dev": "npm run embed-pieces && node esbuild.config.mjs",
-        "build": "npm run embed-pieces && node esbuild.config.mjs production"
+        "build": "npm run lint && npm run embed-pieces && node esbuild.config.mjs production"
     },
     "devDependencies": {
         "@types/node": "^20.10.0",
+        "@typescript-eslint/eslint-plugin": "^8.55.0",
+        "@typescript-eslint/parser": "^8.55.0",
         "builtin-modules": "^3.3.0",
         "esbuild": "^0.19.8",
+        "eslint": "^9.39.2",
         "obsidian": "latest",
         "typescript": "^5.3.2"
     },
