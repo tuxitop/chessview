@@ -478,41 +478,120 @@ cg-board piece.fading {
 }
 
 /* NAG glyph overlay on board */
-.cv-nag-glyph.nag-brilliant .cv-nag-glyph-inner { background: var(--cv-nag-brilliant); }
-.cv-nag-glyph.nag-good .cv-nag-glyph-inner { background: var(--cv-nag-good); }
-.cv-nag-glyph.nag-interesting .cv-nag-glyph-inner { background: var(--cv-nag-interesting); }
-.cv-nag-glyph.nag-dubious .cv-nag-glyph-inner { background: var(--cv-nag-dubious); }
-.cv-nag-glyph.nag-mistake .cv-nag-glyph-inner { background: var(--cv-nag-mistake); }
-.cv-nag-glyph.nag-blunder .cv-nag-glyph-inner { background: var(--cv-nag-blunder); }
-.cv-nag-glyph.nag-miss .cv-nag-glyph-inner { background: var(--cv-nag-miss); }
+.cv-nag-glyph.nag-brilliant .cv-nag-glyph-inner {
+  background: var(--cv-nag-brilliant);
+}
+.cv-nag-glyph.nag-good .cv-nag-glyph-inner {
+  background: var(--cv-nag-good);
+}
+.cv-nag-glyph.nag-interesting .cv-nag-glyph-inner {
+  background: var(--cv-nag-interesting);
+}
+.cv-nag-glyph.nag-dubious .cv-nag-glyph-inner {
+  background: var(--cv-nag-dubious);
+}
+.cv-nag-glyph.nag-mistake .cv-nag-glyph-inner {
+  background: var(--cv-nag-mistake);
+}
+.cv-nag-glyph.nag-blunder .cv-nag-glyph-inner {
+  background: var(--cv-nag-blunder);
+}
+.cv-nag-glyph.nag-miss .cv-nag-glyph-inner {
+  background: var(--cv-nag-miss);
+}
 .cv-nag-glyph.nag-forced .cv-nag-glyph-inner,
 .cv-nag-glyph.nag-equal .cv-nag-glyph-inner,
-.cv-nag-glyph.nag-unclear .cv-nag-glyph-inner { background: var(--cv-nag-neutral); }
+.cv-nag-glyph.nag-unclear .cv-nag-glyph-inner {
+  background: var(--cv-nag-neutral);
+}
 .cv-nag-glyph.nag-white-slight .cv-nag-glyph-inner,
 .cv-nag-glyph.nag-white-better .cv-nag-glyph-inner,
-.cv-nag-glyph.nag-white-winning .cv-nag-glyph-inner { background: var(--cv-nag-positional); }
+.cv-nag-glyph.nag-white-winning .cv-nag-glyph-inner {
+  background: var(--cv-nag-positional);
+}
 .cv-nag-glyph.nag-black-slight .cv-nag-glyph-inner,
 .cv-nag-glyph.nag-black-better .cv-nag-glyph-inner,
-.cv-nag-glyph.nag-black-winning .cv-nag-glyph-inner { background: var(--cv-nag-positional); }
+.cv-nag-glyph.nag-black-winning .cv-nag-glyph-inner {
+  background: var(--cv-nag-positional);
+}
 
 /* NAG-colored last move highlights */
-.chessview[data-nag-highlight='brilliant'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-brilliant) 35%, transparent) !important; }
-.chessview[data-nag-highlight='good'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-good) 35%, transparent) !important; }
-.chessview[data-nag-highlight='interesting'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-interesting) 30%, transparent) !important; }
-.chessview[data-nag-highlight='dubious'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-dubious) 30%, transparent) !important; }
-.chessview[data-nag-highlight='mistake'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-mistake) 35%, transparent) !important; }
-.chessview[data-nag-highlight='blunder'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-blunder) 35%, transparent) !important; }
-.chessview[data-nag-highlight='miss'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-miss) 35%, transparent) !important; }
+.chessview[data-nag-highlight='brilliant'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-brilliant) 35%,
+    transparent
+  ) !important;
+}
+.chessview[data-nag-highlight='good'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-good) 35%,
+    transparent
+  ) !important;
+}
+.chessview[data-nag-highlight='interesting'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-interesting) 30%,
+    transparent
+  ) !important;
+}
+.chessview[data-nag-highlight='dubious'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-dubious) 30%,
+    transparent
+  ) !important;
+}
+.chessview[data-nag-highlight='mistake'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-mistake) 35%,
+    transparent
+  ) !important;
+}
+.chessview[data-nag-highlight='blunder'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-blunder) 35%,
+    transparent
+  ) !important;
+}
+.chessview[data-nag-highlight='miss'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-miss) 35%,
+    transparent
+  ) !important;
+}
 .chessview[data-nag-highlight='forced'] cg-board square.last-move,
 .chessview[data-nag-highlight='equal'] cg-board square.last-move,
-.chessview[data-nag-highlight='unclear'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-neutral) 30%, transparent) !important; }
+.chessview[data-nag-highlight='unclear'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-neutral) 30%,
+    transparent
+  ) !important;
+}
 .chessview[data-nag-highlight='white-slight'] cg-board square.last-move,
 .chessview[data-nag-highlight='white-better'] cg-board square.last-move,
-.chessview[data-nag-highlight='white-winning'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-positional) 30%, transparent) !important; }
+.chessview[data-nag-highlight='white-winning'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-positional) 30%,
+    transparent
+  ) !important;
+}
 .chessview[data-nag-highlight='black-slight'] cg-board square.last-move,
 .chessview[data-nag-highlight='black-better'] cg-board square.last-move,
-.chessview[data-nag-highlight='black-winning'] cg-board square.last-move { background-color: color-mix(in srgb, var(--cv-nag-positional) 30%, transparent) !important; }
-
+.chessview[data-nag-highlight='black-winning'] cg-board square.last-move {
+  background-color: color-mix(
+    in srgb,
+    var(--cv-nag-positional) 30%,
+    transparent
+  ) !important;
+}
 
 /* ============================================================================
    MOVES SECTION
@@ -615,16 +694,32 @@ cg-board piece.fading {
   line-height: 1;
 }
 
-.cv-move-nag.nag-brilliant { color: var(--cv-nag-brilliant); }
-.cv-move-nag.nag-good { color: var(--cv-nag-good); }
-.cv-move-nag.nag-interesting { color: var(--cv-nag-interesting); }
-.cv-move-nag.nag-dubious { color: var(--cv-nag-dubious); }
-.cv-move-nag.nag-mistake { color: var(--cv-nag-mistake); }
-.cv-move-nag.nag-blunder { color: var(--cv-nag-blunder); }
-.cv-move-nag.nag-miss { color: var(--cv-nag-miss); }
+.cv-move-nag.nag-brilliant {
+  color: var(--cv-nag-brilliant);
+}
+.cv-move-nag.nag-good {
+  color: var(--cv-nag-good);
+}
+.cv-move-nag.nag-interesting {
+  color: var(--cv-nag-interesting);
+}
+.cv-move-nag.nag-dubious {
+  color: var(--cv-nag-dubious);
+}
+.cv-move-nag.nag-mistake {
+  color: var(--cv-nag-mistake);
+}
+.cv-move-nag.nag-blunder {
+  color: var(--cv-nag-blunder);
+}
+.cv-move-nag.nag-miss {
+  color: var(--cv-nag-miss);
+}
 .cv-move-nag.nag-forced,
 .cv-move-nag.nag-equal,
-.cv-move-nag.nag-unclear { color: var(--cv-nag-neutral); }
+.cv-move-nag.nag-unclear {
+  color: var(--cv-nag-neutral);
+}
 
 .cv-move.has-comment {
   text-decoration: underline;
@@ -675,22 +770,42 @@ cg-board piece.fading {
 }
 
 /* NAG label in comment area */
-.cv-comment-nag.nag-brilliant { background: var(--cv-nag-brilliant); }
-.cv-comment-nag.nag-good { background: var(--cv-nag-good); }
-.cv-comment-nag.nag-interesting { background: var(--cv-nag-interesting); }
-.cv-comment-nag.nag-dubious { background: var(--cv-nag-dubious); }
-.cv-comment-nag.nag-mistake { background: var(--cv-nag-mistake); }
-.cv-comment-nag.nag-blunder { background: var(--cv-nag-blunder); }
-.cv-comment-nag.nag-miss { background: var(--cv-nag-miss); }
+.cv-comment-nag.nag-brilliant {
+  background: var(--cv-nag-brilliant);
+}
+.cv-comment-nag.nag-good {
+  background: var(--cv-nag-good);
+}
+.cv-comment-nag.nag-interesting {
+  background: var(--cv-nag-interesting);
+}
+.cv-comment-nag.nag-dubious {
+  background: var(--cv-nag-dubious);
+}
+.cv-comment-nag.nag-mistake {
+  background: var(--cv-nag-mistake);
+}
+.cv-comment-nag.nag-blunder {
+  background: var(--cv-nag-blunder);
+}
+.cv-comment-nag.nag-miss {
+  background: var(--cv-nag-miss);
+}
 .cv-comment-nag.nag-forced,
 .cv-comment-nag.nag-equal,
-.cv-comment-nag.nag-unclear { background: var(--cv-nag-neutral); }
+.cv-comment-nag.nag-unclear {
+  background: var(--cv-nag-neutral);
+}
 .cv-comment-nag.nag-white-slight,
 .cv-comment-nag.nag-white-better,
-.cv-comment-nag.nag-white-winning { background: var(--cv-nag-positional); }
+.cv-comment-nag.nag-white-winning {
+  background: var(--cv-nag-positional);
+}
 .cv-comment-nag.nag-black-slight,
 .cv-comment-nag.nag-black-better,
-.cv-comment-nag.nag-black-winning { background: var(--cv-nag-positional); }
+.cv-comment-nag.nag-black-winning {
+  background: var(--cv-nag-positional);
+}
 
 /* ============================================================================
    BRANCH OVERLAY
@@ -1699,44 +1814,6 @@ cg-board piece.fading {
   background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22192%22 height=%22191.906%22 viewBox=%220 0 50.8 50.775%22%3E%3Cpath d=%22M67.36 136.047H53.843q.472-5.333 4.54-9.004.67-.62.744-.67 2.108-1.737 3.596-4.143-3.82-2.505-3.82-7.069 0-2.828 1.712-5.085.57-.72 1.215-1.637.67-.918 1.067-1.786-.595.149-1.81.471-1.191.323-1.762.546 1.712-1.587 3.25-3.77 1.562-2.183 1.835-4.639-1.265-1.29-1.265-3.026t1.216-2.976q1.24-1.24 3-1.24 1.712 0 2.953 1.24 1.24 1.24 1.24 2.976 0 1.761-1.265 3.026.273 2.456 1.835 4.639 1.588 2.183 3.3 3.77-.571-.223-1.811-.546-1.216-.322-1.811-.47.397.867 1.042 1.785.67.918 1.265 1.637 1.711 2.257 1.711 5.085 0 4.564-3.82 7.07 1.414 2.38 3.572 4.142.372.297.744.67 4.093 3.67 4.54 9.004z%22 aria-label=%22o%22 style=%22font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal%22 transform=%22translate(-41.961 -88.67)%22/%3E%3C/svg%3E") !important;
 }
 
-/* libra */
-.chessview[data-piece-set='libra'] .cg-wrap piece.white.king {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.white.queen {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.white.rook {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.white.bishop {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.white.knight {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.white.pawn {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.black.king {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.black.queen {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.black.rook {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.black.bishop {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.black.knight {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='libra'] .cg-wrap piece.black.pawn {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-
 /* maestro */
 .chessview[data-piece-set='maestro'] .cg-wrap piece.white.king {
   background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 xmlns:xlink=%22http://www.w3.org/1999/xlink%22 fill-rule=%22evenodd%22 clip-rule=%22evenodd%22 image-rendering=%22optimizeQuality%22 shape-rendering=%22geometricPrecision%22 text-rendering=%22geometricPrecision%22 viewBox=%220 1.5 50 50%22%3E%3Cdefs%3E%3ClinearGradient xlink:href=%22%23a%22 id=%22b%22 x1=%22-505.97%22 x2=%22-484.22%22 y1=%22-408.5%22 y2=%22-408.5%22 gradientTransform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22 gradientUnits=%22userSpaceOnUse%22/%3E%3ClinearGradient id=%22a%22 x1=%229.241%22 x2=%2240.761%22 y1=%2227.266%22 y2=%2227.266%22 gradientTransform=%22matrix(.98495 0 0 .98605 .376 .641)%22 gradientUnits=%22userSpaceOnUse%22%3E%3Cstop offset=%220%22 stop-color=%22%23ece9df%22/%3E%3Cstop offset=%221%22 stop-color=%22%23f4e0c8%22/%3E%3C/linearGradient%3E%3ClinearGradient xlink:href=%22%23a%22 id=%22c%22 x1=%22-520.15%22 x2=%22-490.84%22 y1=%22-394.44%22 y2=%22-394.44%22 gradientTransform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22 gradientUnits=%22userSpaceOnUse%22/%3E%3ClinearGradient xlink:href=%22%23a%22 id=%22d%22 x1=%22-526.74%22 x2=%22-504.98%22 y1=%22-408.5%22 y2=%22-408.5%22 gradientTransform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22 gradientUnits=%22userSpaceOnUse%22/%3E%3ClinearGradient xlink:href=%22%23a%22 id=%22f%22 x1=%22-510.08%22 x2=%22-500.85%22 y1=%22-412.72%22 y2=%22-412.72%22 gradientTransform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22 gradientUnits=%22userSpaceOnUse%22/%3E%3Cfilter id=%22e%22 width=%221.169%22 height=%221.067%22 x=%22-.085%22 y=%22-.033%22 color-interpolation-filters=%22sRGB%22%3E%3CfeGaussianBlur stdDeviation=%22.392%22/%3E%3C/filter%3E%3Cfilter id=%22g%22 width=%221.205%22 height=%221.063%22 x=%22-.102%22 y=%22-.031%22 color-interpolation-filters=%22sRGB%22%3E%3CfeGaussianBlur stdDeviation=%22.172%22/%3E%3C/filter%3E%3Cfilter id=%22h%22 width=%221.117%22 height=%221.081%22 x=%22-.058%22 y=%22-.041%22 color-interpolation-filters=%22sRGB%22%3E%3CfeGaussianBlur stdDeviation=%22.258%22/%3E%3C/filter%3E%3C/defs%3E%3Cpath fill=%22url(%23b)%22 stroke=%22%23000%22 d=%22M29.132 18.792c6.387-5.74 17.544-2.606 16.851 6.813-.679 6.17-7.013 8.347-7.013 8.347s-3.827-2.228-13.94-2.228l-.014-3.993z%22/%3E%3Cpath fill=%22url(%23c)%22 stroke=%22%23000%22 d=%22m37.942 38.831 1.304 5.276S35.468 46.335 25 46.335s-14.247-2.228-14.247-2.228l1.304-5.276-.996-4.878s3.645-2.229 13.94-2.229c10.296 0 13.94 2.228 13.94 2.228z%22/%3E%3Cpath fill=%22none%22 stroke=%22%23000%22 d=%22M10.754 44.106s3.779-2.228 14.248-2.228 14.248 2.228 14.248 2.228m-27.192-5.275s3.394-2.228 12.978-2.228 12.977 2.228 12.977 2.228%22/%3E%3Cpath fill=%22url(%23d)%22 stroke=%22%23000%22 d=%22M20.9 18.792c-6.387-5.74-17.544-2.606-16.851 6.813.679 6.17 7.013 8.347 7.013 8.347s3.827-2.228 13.94-2.228l.014-3.993z%22/%3E%3Cpath fill=%22%2359917a%22 stroke=%22%23000%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M21.65 9.911h6.733M25.016 6.33v7.98%22/%3E%3Cpath d=%22M-494.08-417.53a11.67 11.67 0 0 0-1.732.146c9.088-.224 13.443 11.958 1.394 16.485l-1.272 4.958 1.526 5.482 2.961 1.105-1.489-5.469.987-5.207s6.273-1.781 6.934-7.82c.506-4.624-2.547-9.727-9.309-9.68z%22 filter=%22url(%23e)%22 opacity=%22.15%22 style=%22mix-blend-mode:normal%22 transform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22/%3E%3Cpath fill=%22url(%23f)%22 stroke=%22%23000%22 stroke-linejoin=%22round%22 d=%22m20.9 18.792 4.13 8.653 4.13-8.653s.702-4.768-4.13-4.768c-4.833 0-4.13 4.768-4.13 4.768z%22/%3E%3Cpath d=%22M-505.48-419.2c4.757.97.867 10.52.016 13.186.024.025 3.078-5.404 4.02-8.913.09-4.504-3.867-4.392-4.036-4.273z%22 filter=%22url(%23g)%22 opacity=%22.15%22 style=%22mix-blend-mode:normal%22 transform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22/%3E%3Cpath d=%22M-505.49-402.26v-.075l.015-3.396s-2.681-6.895-4.052-8.914c-1.333-1.963-3.778-2.93-6.565-2.784 3.972 1.765 8.937 10.029 10.602 15.169z%22 filter=%22url(%23h)%22 opacity=%22.15%22 style=%22mix-blend-mode:normal%22 transform=%22matrix(1.0113 0 0 1.0008 536.22 433.79)%22/%3E%3Cpath fill=%22%23fff%22 d=%22M6.314 29.527c-1.196-1.647-2.01-3.85-1.445-6.636 1.436-7.074 9.457-6.296 9.457-6.296C2.73 20.063 6.454 29.557 6.314 29.527z%22 opacity=%22.8%22/%3E%3Cpath fill=%22%23fff%22 d=%22m23.57 23.025-2.114-4.402s-.69-4.12 3.54-4.056c-4.212 1.33-1.426 8.458-1.426 8.458zm3.456 1.934 2.752-5.929s2.447-2.223 6.116-2.571c-3.947 1.032-6.33 4.875-8.868 8.5z%22/%3E%3Cpath d=%22M25.318 41.924c-10.311 0-14.564 2.183-14.564 2.183s4.253 2.182 14.564 2.182h.021c-15.44-1.99 7.315-3.803 8.284-3.81-2.173-.317-4.917-.554-8.305-.554z%22 opacity=%22.15%22/%3E%3Cpath d=%22M25 46.296c-9.241 0-13.744-2.209-13.744-2.209S15.759 41.878 25 41.878s13.744 2.21 13.744 2.21S34.241 46.295 25 46.295z%22 opacity=%22.15%22/%3E%3Cpath fill=%22%23fff%22 d=%22M12.528 39.169c.85-.45 1.729-.643 2.593-.962-.587.841-.634 2.724-.357 4.062 0 0-.892.125-3.232.905z%22 opacity=%22.7%22/%3E%3Cpath fill=%22%23fff%22 d=%22M12.464 38.021s.3-.288 2.416-.877c-1.59-1.601-1.4-3.446-1.575-3.516-.566.168-1.111.39-1.65.628z%22 opacity=%22.8%22/%3E%3C/svg%3E") !important;
@@ -1811,44 +1888,6 @@ cg-board piece.fading {
 }
 .chessview[data-piece-set='merida'] .cg-wrap piece.black.pawn {
   background-image: url("data:image/svg+xml,%3Csvg clip-rule=%22evenodd%22 fill-rule=%22evenodd%22 height=%2250mm%22 image-rendering=%22optimizeQuality%22 shape-rendering=%22geometricPrecision%22 text-rendering=%22geometricPrecision%22 viewBox=%220 0 50 50%22 width=%2250mm%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M25 46.448H11.606a13.139 13.139 0 0 1-.99-5.043c0-2.975.863-5.644 2.598-8.018 1.736-2.365 3.971-4.054 6.697-5.067a6.824 6.824 0 0 1-2.861-2.398c-.737-1.071-1.1-2.283-1.1-3.634 0-1.69.575-3.156 1.735-4.392 1.151-1.244 2.574-1.961 4.267-2.15-1.346-.981-2.015-2.283-2.015-3.89 0-1.351.491-2.513 1.482-3.477.982-.964 2.176-1.442 3.581-1.442 1.389 0 2.582.478 3.573 1.442s1.49 2.126 1.49 3.477c0 1.607-.669 2.909-2.015 3.89 1.693.189 3.116.906 4.267 2.15 1.16 1.236 1.736 2.703 1.736 4.392 0 1.351-.373 2.563-1.126 3.634a7.036 7.036 0 0 1-2.862 2.398c2.726 1.013 4.962 2.702 6.697 5.067 1.736 2.374 2.6 5.043 2.6 8.018 0 1.739-.322 3.42-.966 5.043z%22 fill=%22%231f1a17%22/%3E%3C/svg%3E") !important;
-}
-
-/* monarchy */
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.white.king {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.white.queen {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.white.rook {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.white.bishop {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.white.knight {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.white.pawn {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.black.king {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.black.queen {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.black.rook {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.black.bishop {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.black.knight {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
-}
-.chessview[data-piece-set='monarchy'] .cg-wrap piece.black.pawn {
-  background-image: url("data:image/svg+xml,404: Not Found") !important;
 }
 
 /* pirouetti */

@@ -127,7 +127,6 @@ export class ChessViewSettingTab extends PluginSettingTab {
             kosal: 'Kosal',
             leipzig: 'Leipzig',
             maestro: 'Maestro',
-            monarchy: 'Monarchy',
             staunty: 'Staunty',
             tatiana: 'Tatiana',
             chess7: 'Chess7'

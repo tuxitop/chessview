@@ -57,7 +57,6 @@ export type PieceSet =
   | 'kosal'
   | 'leipzig'
   | 'maestro'
-  | 'monarchy'
   | 'staunty'
   | 'tatiana'
   | 'chess7';
