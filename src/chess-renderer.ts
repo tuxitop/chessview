@@ -22,12 +22,10 @@ export class ChessRenderer {
   private startFen: string;
   private isFlipped: boolean = false;
 
-  // Sub-controllers
   private board: BoardManager | null = null;
   private puzzle: PuzzleController | null = null;
   private nav: NavigationController | null = null;
 
-  // Keyboard handler ref
   private _keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private destroyed: boolean = false;
 
@@ -41,7 +39,6 @@ export class ChessRenderer {
     this.settings = settings;
     this.chess = new Chess();
 
-    // Orientation
     if (data.orientation === 'black') {
       this.isFlipped = true;
     } else if (data.orientation === 'white') {
@@ -50,18 +47,16 @@ export class ChessRenderer {
       this.isFlipped = true;
     }
 
-    // Load starting position
     if (data.fen) {
       try {
         this.chess.load(data.fen);
-      } catch (e) {
+      } catch {
         if (!data.error) {
-          data.error = `Failed to load position: ${e instanceof Error ? e.message : 'Invalid FEN'}`;
+          data.error = 'Failed to load position';
         }
       }
     }
 
-    // Auto orientation for non-puzzles
     if (
       settings.defaultOrientation === 'auto' &&
       !data.isPuzzle &&
@@ -70,7 +65,6 @@ export class ChessRenderer {
       this.isFlipped = this.chess.turn() === 'b';
     }
 
-    // Puzzle orientation defaults to player's side
     if (data.isPuzzle && data.orientation === data.playerColor) {
       this.isFlipped = data.playerColor === 'black';
     }
@@ -78,12 +72,7 @@ export class ChessRenderer {
     this.startFen = this.chess.fen();
   }
 
-  // ===========================================================================
-  // RENDER
-  // ===========================================================================
-
   render(): void {
-    // Clean up any previous render
     this.destroy();
     this.destroyed = false;
 
@@ -95,29 +84,24 @@ export class ChessRenderer {
       return;
     }
 
-    // Re-initialize chess state
     this.chess = new Chess();
     if (this.data.fen) {
       try {
         this.chess.load(this.data.fen);
       } catch {
-        // FEN was already validated during parsing; load failure here
-        // is non-fatal since the board will show the default position.
+        // FEN already validated during parsing
       }
     }
 
     const mainContainer = this.container.createDiv({ cls: 'cv-container' });
 
-    // Header
     this.renderHeader(mainContainer);
 
-    // Content area
     const content = mainContainer.createDiv({ cls: 'cv-content' });
     if (this.settings.moveListPosition === 'bottom') {
       content.addClass('cv-content-vertical');
     }
 
-    // Create board manager
     this.board = new BoardManager(
       this.container,
       this.settings,
@@ -129,7 +113,6 @@ export class ChessRenderer {
     this.board.createBoard(boardSection);
 
     if (this.data.isPuzzle) {
-      // PUZZLE MODE
       this.puzzle = new PuzzleController(
         this.chess,
         this.data,
@@ -151,7 +134,6 @@ export class ChessRenderer {
 
       this.puzzle.start();
     } else {
-      // GAME MODE
       this.nav = new NavigationController(
         this.chess,
         this.data,
@@ -160,9 +142,10 @@ export class ChessRenderer {
         this.startFen
       );
 
-      this.board.initChessground(this.chess, (orig: Key, dest: Key) =>
-        this.nav!.handleUserMove(orig, dest)
-      );
+      const userMoveHandler = (orig: Key, dest: Key): void => {
+        void this.nav!.handleUserMove(orig, dest);
+      };
+      this.board.initChessground(this.chess, userMoveHandler);
 
       this.nav.createBranchOverlay(boardSection);
 
@@ -183,10 +166,6 @@ export class ChessRenderer {
 
     this.setupKeyboardShortcuts();
   }
-
-  // ===========================================================================
-  // HEADER
-  // ===========================================================================
 
   private renderError(message: string): void {
     const errorContainer = this.container.createDiv({ cls: 'cv-error' });
@@ -235,18 +214,13 @@ export class ChessRenderer {
       if (result && result !== '*') parts.push(result);
 
       headerText.textContent =
-        parts.length > 0 ? parts.join(' • ') : 'Chess Position';
+        parts.length > 0 ? parts.join(' • ') : 'Chess position';
     }
   }
-
-  // ===========================================================================
-  // FOOTER
-  // ===========================================================================
 
   private renderFooter(container: HTMLElement): void {
     const footer = container.createDiv({ cls: 'cv-footer' });
 
-    // Left side: navigation + counter
     const leftGroup = footer.createDiv({ cls: 'cv-footer-left' });
 
     if (!this.data.isPuzzle && this.nav && this.nav.moveCount > 0) {
@@ -277,15 +251,16 @@ export class ChessRenderer {
       this.nav.setCounterEl(counterEl);
     }
 
-    // Right side: flip, copy, links
     const rightGroup = footer.createDiv({ cls: 'cv-footer-right' });
 
     this.createControlBtn(rightGroup, '⇅', 'Flip board (F)', () => {
       this.isFlipped = !this.isFlipped;
       this.board?.flipBoard();
       if (this.nav) {
-        const moves = [...this.nav.currentMoves];
-        this.board?.updateNagOverlay(moves, this.nav.currentIndex);
+        this.board?.updateNagOverlay(
+          this.nav.currentMoves,
+          this.nav.currentIndex
+        );
       }
     });
 
@@ -293,8 +268,10 @@ export class ChessRenderer {
       cls: 'cv-action-btn',
       attr: { 'aria-label': 'Copy', title: 'Copy to clipboard' }
     });
-    copyBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
-    copyBtn.onclick = () => this.copyToClipboard();
+    this.createCopyIcon(copyBtn);
+    copyBtn.onclick = () => {
+      void this.copyToClipboard();
+    };
 
     if (this.settings.showAnalysisLinks) {
       const urls = generateAnalysisUrls(this.data);
@@ -313,6 +290,33 @@ export class ChessRenderer {
     }
   }
 
+  private createCopyIcon(container: HTMLElement): void {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '20');
+    svg.setAttribute('height', '20');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '9');
+    rect.setAttribute('y', '9');
+    rect.setAttribute('width', '13');
+    rect.setAttribute('height', '13');
+    rect.setAttribute('rx', '2');
+    svg.appendChild(rect);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute(
+      'd',
+      'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'
+    );
+    svg.appendChild(path);
+
+    container.appendChild(svg);
+  }
+
   private createControlBtn(
     container: HTMLElement,
     icon: string,
@@ -327,10 +331,6 @@ export class ChessRenderer {
     btn.onclick = onClick;
     return btn;
   }
-
-  // ===========================================================================
-  // CLIPBOARD
-  // ===========================================================================
 
   private async copyToClipboard(): Promise<void> {
     let text: string;
@@ -364,17 +364,12 @@ export class ChessRenderer {
         setTimeout(() => btn.removeClass('copied'), COPY_FEEDBACK_DURATION);
       }
     } catch {
-      // clipboard API can fail in non-secure contexts or restricted environments
       if (btn) {
         btn.addClass('copy-failed');
         setTimeout(() => btn.removeClass('copy-failed'), COPY_FAILURE_DURATION);
       }
     }
   }
-
-  // ===========================================================================
-  // KEYBOARD
-  // ===========================================================================
 
   private setupKeyboardShortcuts(): void {
     this.container.setAttribute('tabindex', '0');
@@ -419,10 +414,6 @@ export class ChessRenderer {
         e.preventDefault();
         this.isFlipped = !this.isFlipped;
         this.board?.flipBoard();
-        if (this.nav) {
-          const moves = [...this.nav.currentMoves];
-          this.board?.updateNagOverlay(moves, this.nav.currentIndex);
-        }
         break;
       }
     };
@@ -430,10 +421,6 @@ export class ChessRenderer {
     this.container.addEventListener('keydown', handler);
     this._keyHandler = handler;
   }
-
-  // ===========================================================================
-  // CLEANUP
-  // ===========================================================================
 
   destroy(): void {
     this.destroyed = true;

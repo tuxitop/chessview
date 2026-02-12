@@ -1,5 +1,5 @@
 // src/utils.ts
-import { Chess, ChessMove } from 'chess.js';
+import { Chess } from 'chess.js';
 import { Key } from 'chessground/types';
 import { SQUARE_SIZE_PERCENT } from './types';
 
@@ -16,7 +16,7 @@ export function isValidSquare(sq: string): boolean {
  */
 export function getValidMoves(chess: Chess): Map<Key, Key[]> {
   const dests = new Map<Key, Key[]>();
-  const allMoves = chess.moves({ verbose: true }) as ChessMove[];
+  const allMoves = chess.moves({ verbose: true });
 
   for (const move of allMoves) {
     const from = move.from as Key;

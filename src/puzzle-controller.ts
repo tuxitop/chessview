@@ -1,6 +1,6 @@
 // src/puzzle-controller.ts
 import { Chess } from 'chess.js';
-import { Color, Key } from 'chessground/types';
+import { Key } from 'chessground/types';
 
 import {
   ParsedChessData,
@@ -27,9 +27,7 @@ export class PuzzleController {
   private playedMoves: MoveData[] = [];
   private solutionRevealed: boolean = false;
   private destroyed: boolean = false;
-  private isPromoting: boolean = false;
 
-  // DOM
   private moveListEl: HTMLElement | null = null;
   private statusEl: HTMLElement | null = null;
   private puzzleButtonsEl: HTMLElement | null = null;
@@ -48,10 +46,6 @@ export class PuzzleController {
     this.startFen = startFen;
   }
 
-  // ===========================================================================
-  // SETUP
-  // ===========================================================================
-
   createMoveList(movesSection: HTMLElement): void {
     this.moveListEl = movesSection.createDiv({ cls: 'cv-moves' });
   }
@@ -63,7 +57,7 @@ export class PuzzleController {
   }
 
   start(): void {
-    this.setState('waiting');
+    this.state = 'waiting';
     this.moveIndex = 0;
     this.playedMoves = [];
     this.solutionRevealed = false;
@@ -74,7 +68,6 @@ export class PuzzleController {
     this.updateStatus();
     this.renderMoveList();
 
-    // Determine if first move is opponent's (auto-play it)
     const fenTurn = this.chess.turn() === 'w' ? 'white' : 'black';
     const firstMoveIsOpponent = fenTurn !== this.data.playerColor;
 
@@ -83,23 +76,11 @@ export class PuzzleController {
         if (!this.destroyed) this.playOpponentMove();
       }, PUZZLE_OPPONENT_FIRST_MOVE_DELAY);
     } else {
-      this.setState('playing');
+      this.state = 'playing';
       this.enableInput();
       this.updateStatus();
     }
   }
-
-  // ===========================================================================
-  // STATE MANAGEMENT
-  // ===========================================================================
-
-  private setState(newState: PuzzleState): void {
-    this.state = newState;
-  }
-
-  // ===========================================================================
-  // MOVE LOGIC
-  // ===========================================================================
 
   private playOpponentMove(): void {
     if (this.destroyed) return;
@@ -119,34 +100,36 @@ export class PuzzleController {
         this.moveIndex++;
       }
     } catch (err) {
-      console.warn('Puzzle: could not play opponent move:', expectedMove.san, err);
+      console.warn(
+        'Puzzle: could not play opponent move:',
+        expectedMove.san,
+        err
+      );
     }
 
     this.board.syncPuzzleBoard(this.chess, this.playedMoves);
     this.renderMoveList();
 
     if (this.moveIndex < this.data.solutionMoves.length) {
-      this.setState('playing');
+      this.state = 'playing';
       this.enableInput();
       this.updateStatus();
     } else {
-      this.setState('solved');
+      this.state = 'solved';
       this.board.disableInput();
       this.updateStatus();
     }
   }
 
   async handleMove(orig: Key, dest: Key): Promise<void> {
-    if (this.state !== 'playing' || this.isPromoting) return;
+    if (this.state !== 'playing') return;
     if (this.moveIndex >= this.data.solutionMoves.length) return;
 
     const expected = this.data.solutionMoves[this.moveIndex];
 
-    // Lock to prevent concurrent promotion dialogs
-    this.isPromoting = true;
+    const promotion = await this.board.getPromotion(this.chess, orig, dest);
 
     try {
-      const promotion = await this.board.getPromotion(this.chess, orig, dest);
       const move = this.chess.move({ from: orig, to: dest, promotion });
 
       if (!move) {
@@ -155,7 +138,6 @@ export class PuzzleController {
       }
 
       if (move.san === expected.san) {
-        // Correct move
         this.playedMoves.push({
           san: move.san,
           from: move.from,
@@ -168,11 +150,11 @@ export class PuzzleController {
         this.renderMoveList();
 
         if (this.moveIndex >= this.data.solutionMoves.length) {
-          this.setState('solved');
+          this.state = 'solved';
           this.board.disableInput();
           this.updateStatus();
         } else {
-          this.setState('waiting');
+          this.state = 'waiting';
           this.board.disableInput();
           this.updateStatus();
 
@@ -181,9 +163,8 @@ export class PuzzleController {
           }, PUZZLE_OPPONENT_RESPONSE_DELAY);
         }
       } else {
-        // Wrong move — undo it
         this.chess.undo();
-        this.setState('failed');
+        this.state = 'failed';
 
         this.playedMoves.push({
           san: move.san,
@@ -200,23 +181,18 @@ export class PuzzleController {
       }
     } catch {
       this.board.syncPuzzleBoard(this.chess, this.playedMoves);
-    } finally {
-      this.isPromoting = false;
     }
   }
 
   private enableInput(): void {
-    const playerColor: Color = this.data.playerColor as Color;
     this.board.enablePuzzleInput(
       this.chess,
-      playerColor,
-      (orig: Key, dest: Key) => this.handleMove(orig, dest)
+      this.data.playerColor,
+      (orig: Key, dest: Key) => {
+        void this.handleMove(orig, dest);
+      }
     );
   }
-
-  // ===========================================================================
-  // ACTIONS
-  // ===========================================================================
 
   private retry(): void {
     this.solutionRevealed = false;
@@ -244,13 +220,14 @@ export class PuzzleController {
     const fromSquare = nextMove.from;
 
     if (fromSquare) {
-      this.board.showHintHighlight(fromSquare, null, 0, HINT_HIGHLIGHT_DURATION);
+      this.board.showHintHighlight(
+        fromSquare,
+        null,
+        0,
+        HINT_HIGHLIGHT_DURATION
+      );
     }
   }
-
-  // ===========================================================================
-  // UI RENDERING
-  // ===========================================================================
 
   private updateStatus(): void {
     if (!this.statusEl) return;
@@ -266,7 +243,7 @@ export class PuzzleController {
       break;
     case 'playing':
       this.statusEl.addClass('playing');
-      this.statusEl.textContent = `${playerLabel} to move — Your turn`;
+      this.statusEl.textContent = `${playerLabel} to move — your turn`;
       break;
     case 'solved':
       this.statusEl.addClass('success');
@@ -309,13 +286,13 @@ export class PuzzleController {
       if (this.solutionRevealed) {
         const hideBtn = this.puzzleButtonsEl.createEl('button', {
           cls: 'cv-btn cv-puzzle-btn',
-          text: '🙈 Hide Solution'
+          text: '🙈 Hide solution'
         });
         hideBtn.onclick = () => this.hideSolution();
       } else {
         const solBtn = this.puzzleButtonsEl.createEl('button', {
           cls: 'cv-btn cv-puzzle-btn',
-          text: '👁 Show Solution'
+          text: '👁 Show solution'
         });
         solBtn.onclick = () => this.showSolution();
       }
@@ -414,10 +391,6 @@ export class PuzzleController {
     }
     return san;
   }
-
-  // ===========================================================================
-  // CLEANUP
-  // ===========================================================================
 
   destroy(): void {
     this.destroyed = true;

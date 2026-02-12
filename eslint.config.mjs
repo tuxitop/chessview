@@ -1,3 +1,4 @@
+// eslint.config.mjs
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 
@@ -17,7 +18,8 @@ export default [
       parser: tsParser,
       parserOptions: {
         ecmaVersion: 2020,
-        sourceType: 'module'
+        sourceType: 'module',
+        project: './tsconfig.json'
       },
       globals: {
         window: 'readonly',
@@ -42,18 +44,32 @@ export default [
     },
     rules: {
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' }
+      ],
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-non-null-assertion': 'off',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': [
+        'error',
+        {
+          checksVoidReturn: {
+            arguments: true,
+            properties: true
+          }
+        }
+      ],
+      'no-console': ['error', { allow: ['warn', 'error', 'debug'] }],
       'no-debugger': 'error',
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'prefer-const': 'warn',
-      'eqeqeq': ['warn', 'always'],
+      eqeqeq: ['warn', 'always'],
       'no-throw-literal': 'warn',
-      "indent": ["error", 2]
+      indent: ['error', 2]
     }
   }
 ];

@@ -30,7 +30,7 @@ export class ChessViewSettingTab extends PluginSettingTab {
     // ====================================================================
     // BOARD APPEARANCE
     // ====================================================================
-    containerEl.createEl('h2', { text: 'Board Appearance' });
+    new Setting(containerEl).setName('Board appearance').setHeading();
 
     new Setting(containerEl)
       .setName('Board theme')
@@ -45,10 +45,10 @@ export class ChessViewSettingTab extends PluginSettingTab {
             gray: 'Gray',
             wood: 'Wood',
             marble: 'Marble',
-            custom: 'Custom Colors'
+            custom: 'Custom colors'
           })
           .setValue(this.plugin.settings.boardTheme)
-          .onChange(async (value: string) => {
+          .onChange((value: string) => {
             this.plugin.settings.boardTheme = value as BoardTheme;
             if (value !== 'custom') {
               const theme = BOARD_THEMES[value as BoardTheme];
@@ -57,7 +57,7 @@ export class ChessViewSettingTab extends PluginSettingTab {
                 this.plugin.settings.darkSquareColor = theme.dark;
               }
             }
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.display();
           })
       );
@@ -69,9 +69,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
         .addColorPicker((picker) =>
           picker
             .setValue(this.plugin.settings.lightSquareColor)
-            .onChange(async (value) => {
+            .onChange((value) => {
               this.plugin.settings.lightSquareColor = value;
-              await this.plugin.saveSettings();
+              void this.plugin.saveSettings();
             })
         );
 
@@ -81,9 +81,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
         .addColorPicker((picker) =>
           picker
             .setValue(this.plugin.settings.darkSquareColor)
-            .onChange(async (value) => {
+            .onChange((value) => {
               this.plugin.settings.darkSquareColor = value;
-              await this.plugin.saveSettings();
+              void this.plugin.saveSettings();
             })
         );
     }
@@ -99,9 +99,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
         return dropdown
           .addOptions(options)
           .setValue(this.plugin.settings.boardSize)
-          .onChange(async (value: string) => {
+          .onChange((value: string) => {
             this.plugin.settings.boardSize = value as BoardSize;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           });
       });
 
@@ -123,25 +123,26 @@ export class ChessViewSettingTab extends PluginSettingTab {
             gioco: 'Gioco',
             governor: 'Governor',
             horsey: 'Horsey',
-            icpieces: 'IC Pieces',
+            icpieces: 'IC pieces',
             kosal: 'Kosal',
             leipzig: 'Leipzig',
             maestro: 'Maestro',
+            monarchy: 'Monarchy',
             staunty: 'Staunty',
             tatiana: 'Tatiana',
             chess7: 'Chess7'
           })
           .setValue(this.plugin.settings.pieceSet)
-          .onChange(async (value: PieceSet) => {
-            this.plugin.settings.pieceSet = value;
-            await this.plugin.saveSettings();
+          .onChange((value: string) => {
+            this.plugin.settings.pieceSet = value as PieceSet;
+            void this.plugin.saveSettings();
           })
       );
 
     // ====================================================================
     // NOTATION
     // ====================================================================
-    containerEl.createEl('h2', { text: 'Notation' });
+    new Setting(containerEl).setName('Notation').setHeading();
 
     new Setting(containerEl)
       .setName('Move notation style')
@@ -149,13 +150,13 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
           .addOptions({
-            figurine: 'Figurine (\u2658f3, \u2657c4)',
+            figurine: 'Figurine (♘f3, ♗c4)',
             letter: 'Letters (Nf3, Bc4)'
           })
           .setValue(this.plugin.settings.notationType)
-          .onChange(async (value: string) => {
+          .onChange((value: string) => {
             this.plugin.settings.notationType = value as 'figurine' | 'letter';
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -165,16 +166,16 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.showCoordinates)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.showCoordinates = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
     // ====================================================================
     // HIGHLIGHTS & COLORS
     // ====================================================================
-    containerEl.createEl('h2', { text: 'Colors & Highlights' });
+    new Setting(containerEl).setName('Colors & highlights').setHeading();
 
     new Setting(containerEl)
       .setName('Last move highlight')
@@ -182,12 +183,12 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addColorPicker((picker) =>
         picker
           .setValue(this.rgbaToHex(this.plugin.settings.lastMoveHighlightColor))
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.lastMoveHighlightColor = this.hexToRgba(
               value,
               0.41
             );
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -197,12 +198,12 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addColorPicker((picker) =>
         picker
           .setValue(this.rgbaToHex(this.plugin.settings.checkHighlightColor))
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.checkHighlightColor = this.hexToRgba(
               value,
               0.5
             );
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -212,9 +213,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addColorPicker((picker) =>
         picker
           .setValue(this.rgbaToHex(this.plugin.settings.arrowColor))
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.arrowColor = this.hexToRgba(value, 0.8);
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -224,16 +225,16 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addColorPicker((picker) =>
         picker
           .setValue(this.rgbaToHex(this.plugin.settings.circleColor))
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.circleColor = this.hexToRgba(value, 0.8);
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
     // ====================================================================
     // BEHAVIOR
     // ====================================================================
-    containerEl.createEl('h2', { text: 'Behavior' });
+    new Setting(containerEl).setName('Behavior').setHeading();
 
     new Setting(containerEl)
       .setName('Animation speed')
@@ -243,9 +244,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
           .setLimits(0, 500, 50)
           .setValue(this.plugin.settings.animationSpeed)
           .setDynamicTooltip()
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.animationSpeed = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -257,9 +258,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
           .setLimits(200, 3000, 100)
           .setValue(this.plugin.settings.autoPlaySpeed)
           .setDynamicTooltip()
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.autoPlaySpeed = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -267,12 +268,10 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .setName('Show move list')
       .setDesc('Display the list of moves alongside the board')
       .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.showMoveList)
-          .onChange(async (value) => {
-            this.plugin.settings.showMoveList = value;
-            await this.plugin.saveSettings();
-          })
+        toggle.setValue(this.plugin.settings.showMoveList).onChange((value) => {
+          this.plugin.settings.showMoveList = value;
+          void this.plugin.saveSettings();
+        })
       );
 
     new Setting(containerEl)
@@ -285,9 +284,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
             bottom: 'Below board'
           })
           .setValue(this.plugin.settings.moveListPosition)
-          .onChange(async (value: string) => {
+          .onChange((value: string) => {
             this.plugin.settings.moveListPosition = value as 'right' | 'bottom';
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -297,9 +296,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.showAnalysisLinks)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.showAnalysisLinks = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
@@ -314,19 +313,19 @@ export class ChessViewSettingTab extends PluginSettingTab {
             auto: 'Auto (based on side to move)'
           })
           .setValue(this.plugin.settings.defaultOrientation)
-          .onChange(async (value: string) => {
+          .onChange((value: string) => {
             this.plugin.settings.defaultOrientation = value as
               | 'white'
               | 'black'
               | 'auto';
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
     // ====================================================================
     // PUZZLE SETTINGS
     // ====================================================================
-    containerEl.createEl('h2', { text: 'Puzzle Mode' });
+    new Setting(containerEl).setName('Puzzle mode').setHeading();
 
     new Setting(containerEl)
       .setName('Show hints')
@@ -334,16 +333,16 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.puzzleShowHints)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.puzzleShowHints = value;
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
           })
       );
 
     // ====================================================================
     // RESET
     // ====================================================================
-    containerEl.createEl('h2', { text: 'Reset' });
+    new Setting(containerEl).setName('Reset').setHeading();
 
     new Setting(containerEl)
       .setName('Reset to defaults')
@@ -352,9 +351,9 @@ export class ChessViewSettingTab extends PluginSettingTab {
         button
           .setButtonText('Reset')
           .setWarning()
-          .onClick(async () => {
+          .onClick(() => {
             Object.assign(this.plugin.settings, DEFAULT_SETTINGS);
-            await this.plugin.saveSettings();
+            void this.plugin.saveSettings();
             this.display();
             new Notice('ChessView settings reset to defaults');
           })

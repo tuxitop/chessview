@@ -26,23 +26,16 @@ export class NavigationController {
   private board: BoardManager;
   private startFen: string;
 
-  // Move state
   private moves: MoveData[] = [];
   private mainLineMoves: MoveData[] = [];
   private currentMoveIndex: number = 0;
 
-  // Branch state
   private branchStack: BranchPoint[] = [];
   private isInBranch: boolean = false;
 
-  // Autoplay state
   private isPlaying: boolean = false;
   private playInterval: ReturnType<typeof setInterval> | null = null;
 
-  // Promotion lock
-  private isPromoting: boolean = false;
-
-  // DOM
   private moveListEl: HTMLElement | null = null;
   private commentEl: HTMLElement | null = null;
   private counterEl: HTMLElement | null = null;
@@ -70,10 +63,6 @@ export class NavigationController {
     }
   }
 
-  // ===========================================================================
-  // SETUP
-  // ===========================================================================
-
   createMoveList(movesSection: HTMLElement): void {
     this.moveListEl = movesSection.createDiv({ cls: 'cv-moves' });
     this.renderMoveList();
@@ -98,10 +87,6 @@ export class NavigationController {
     this.playBtnEl = el;
   }
 
-  // ===========================================================================
-  // PUBLIC GETTERS
-  // ===========================================================================
-
   get moveCount(): number {
     return this.moves.length;
   }
@@ -113,10 +98,6 @@ export class NavigationController {
   get currentMoves(): readonly MoveData[] {
     return this.moves;
   }
-
-  // ===========================================================================
-  // NAVIGATION
-  // ===========================================================================
 
   goToMove(index: number): void {
     if (this.destroyed) return;
@@ -146,7 +127,9 @@ export class NavigationController {
           dests: getValidMoves(this.chess),
           showDests: true,
           events: {
-            after: (orig: Key, dest: Key) => this.handleUserMove(orig, dest)
+            after: (orig: Key, dest: Key) => {
+              void this.handleUserMove(orig, dest);
+            }
           }
         }
         : { free: false, color: undefined },
@@ -184,31 +167,19 @@ export class NavigationController {
     }
   }
 
-  // ===========================================================================
-  // USER MOVES (editable)
-  // ===========================================================================
-
   async handleUserMove(orig: Key, dest: Key): Promise<void> {
-    if (this.destroyed || this.isPromoting) return;
+    if (this.destroyed) return;
 
-    // Lock to prevent concurrent promotion dialogs
-    this.isPromoting = true;
-    this.stopAutoPlay();
+    const promotion = await this.board.getPromotion(this.chess, orig, dest);
 
     try {
-      const promotion = await this.board.getPromotion(this.chess, orig, dest);
-
       const move = this.chess.move({ from: orig, to: dest, promotion });
-      if (!move) {
-        this.board.syncBoard(this.chess, null);
-        return;
-      }
+      if (!move) return;
 
       if (
         this.currentMoveIndex < this.mainLineMoves.length &&
         this.mainLineMoves[this.currentMoveIndex].san === move.san
       ) {
-        // Move matches main line — just advance
         this.currentMoveIndex++;
         this.board.syncAfterMove(
           this.chess,
@@ -224,7 +195,6 @@ export class NavigationController {
         return;
       }
 
-      // Entering a branch
       if (!this.isInBranch) {
         this.branchStack.push({
           moveIndex: this.currentMoveIndex,
@@ -261,8 +231,6 @@ export class NavigationController {
       this.updateBranchIndicator();
     } catch {
       this.board.syncBoard(this.chess, null);
-    } finally {
-      this.isPromoting = false;
     }
   }
 
@@ -278,10 +246,6 @@ export class NavigationController {
     this.renderMoveList();
     this.updateBranchIndicator();
   }
-
-  // ===========================================================================
-  // AUTOPLAY
-  // ===========================================================================
 
   toggleAutoPlay(): void {
     if (this.isPlaying) {
@@ -318,10 +282,6 @@ export class NavigationController {
       this.playInterval = null;
     }
   }
-
-  // ===========================================================================
-  // MOVE LIST UI
-  // ===========================================================================
 
   private renderMoveList(): void {
     if (!this.moveListEl) return;
@@ -452,10 +412,6 @@ export class NavigationController {
     }
   }
 
-  // ===========================================================================
-  // CLIPBOARD
-  // ===========================================================================
-
   getClipboardText(): string {
     if (this.data.type === 'fen' || this.moves.length === 0) {
       return this.chess.fen();
@@ -475,10 +431,6 @@ export class NavigationController {
 
     return headers ? `${headers}\n\n${movesText}` : movesText;
   }
-
-  // ===========================================================================
-  // CLEANUP
-  // ===========================================================================
 
   destroy(): void {
     this.destroyed = true;

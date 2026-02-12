@@ -10,7 +10,8 @@ import {
   ParsedChessData,
   MoveData,
   BOARD_THEMES,
-  NAG_CLASSES
+  NAG_CLASSES,
+  SQUARE_SIZE_PERCENT
 } from './types';
 import {
   isValidSquare,
@@ -37,7 +38,6 @@ export class BoardManager {
   private data: ParsedChessData;
   private container: HTMLElement;
 
-  // Style tracking for cleanup
   private _appliedStyleProps: string[] = [];
 
   constructor(
@@ -51,10 +51,6 @@ export class BoardManager {
     this.data = data;
     this.isFlipped = isFlipped;
   }
-
-  // ===========================================================================
-  // INITIALIZATION
-  // ===========================================================================
 
   createBoard(boardSection: HTMLElement): void {
     this.boardWrapperEl = boardSection;
@@ -87,7 +83,7 @@ export class BoardManager {
         isEditable && onUserMove
           ? {
             free: false,
-            color: 'both' as Color,
+            color: 'both',
             dests: getValidMoves(chess),
             showDests: true,
             events: { after: onUserMove }
@@ -104,10 +100,6 @@ export class BoardManager {
     this.ground = Chessground(this.boardEl, config);
   }
 
-  // ===========================================================================
-  // BOARD STATE UPDATES
-  // ===========================================================================
-
   syncBoard(
     chess: Chess,
     lastMove: MoveData | null,
@@ -119,12 +111,11 @@ export class BoardManager {
   ): void {
     if (!this.ground) return;
 
-    const turn: Color = chess.turn() === 'w' ? 'white' : 'black';
     const inCheck = isInCheck(chess);
 
     this.ground.set({
       fen: chess.fen(),
-      turnColor: turn,
+      turnColor: chess.turn() === 'w' ? 'white' : 'black',
       check: inCheck,
       lastMove: lastMove
         ? [lastMove.from as Key, lastMove.to as Key]
@@ -139,27 +130,23 @@ export class BoardManager {
     });
   }
 
-  /**
-   * Full board sync after a user/game move with editable movable config.
-   */
   syncAfterMove(
     chess: Chess,
-    move: { from: string; to: string },
+    move: ChessMove,
     moves: MoveData[],
     currentMoveIndex: number
   ): void {
     if (!this.ground) return;
 
-    const turn: Color = chess.turn() === 'w' ? 'white' : 'black';
     const inCheck = isInCheck(chess);
 
     this.ground.set({
       fen: chess.fen(),
-      turnColor: turn,
+      turnColor: chess.turn() === 'w' ? 'white' : 'black',
       check: inCheck,
       lastMove: [move.from as Key, move.to as Key],
       movable: {
-        color: 'both' as Color,
+        color: 'both',
         dests: getValidMoves(chess)
       },
       drawable: {
@@ -168,13 +155,9 @@ export class BoardManager {
     });
   }
 
-  /**
-   * Sync for puzzle mode — no last move display for wrong attempts.
-   */
   syncPuzzleBoard(chess: Chess, playedMoves: MoveData[]): void {
     if (!this.ground) return;
 
-    const turn: Color = chess.turn() === 'w' ? 'white' : 'black';
     const inCheck = isInCheck(chess);
 
     const lastPlayed =
@@ -187,16 +170,12 @@ export class BoardManager {
 
     this.ground.set({
       fen: chess.fen(),
-      turnColor: turn,
+      turnColor: chess.turn() === 'w' ? 'white' : 'black',
       check: inCheck,
       lastMove: showLastMove as [Key, Key] | undefined,
       drawable: { autoShapes: this.getAutoShapes(null, 0) }
     });
   }
-
-  // ===========================================================================
-  // MOVABLE CONFIG (for puzzle & editable)
-  // ===========================================================================
 
   enablePuzzleInput(
     chess: Chess,
@@ -230,17 +209,13 @@ export class BoardManager {
     this.ground.set({
       movable: {
         free: false,
-        color: 'both' as Color,
+        color: 'both',
         dests: getValidMoves(chess),
         showDests: true,
         events: { after: handler }
       }
     });
   }
-
-  // ===========================================================================
-  // ORIENTATION
-  // ===========================================================================
 
   get flipped(): boolean {
     return this.isFlipped;
@@ -250,10 +225,6 @@ export class BoardManager {
     this.isFlipped = !this.isFlipped;
     this.ground?.toggleOrientation();
   }
-
-  // ===========================================================================
-  // SHAPES (arrows, circles)
-  // ===========================================================================
 
   getAutoShapes(
     moves: MoveData[] | null,
@@ -315,10 +286,6 @@ export class BoardManager {
     this.ground?.setAutoShapes(shapes);
   }
 
-  // ===========================================================================
-  // HINT HIGHLIGHT (puzzle)
-  // ===========================================================================
-
   showHintHighlight(
     square: string,
     moves: MoveData[] | null,
@@ -339,15 +306,11 @@ export class BoardManager {
     }, durationMs);
   }
 
-  // ===========================================================================
-  // NAG OVERLAY
-  // ===========================================================================
-
   private createNagOverlay(boardSection: HTMLElement): void {
     this.nagOverlayEl = boardSection.createDiv({ cls: 'cv-nag-overlay' });
   }
 
-  updateNagOverlay(moves: MoveData[], currentMoveIndex: number): void {
+  updateNagOverlay(moves: readonly MoveData[], currentMoveIndex: number): void {
     if (!this.nagOverlayEl) return;
     this.nagOverlayEl.empty();
 
@@ -375,8 +338,7 @@ export class BoardManager {
     });
   }
 
-  updateNagHighlight(moves: MoveData[], currentMoveIndex: number): void {
-    // Clear previous highlight
+  updateNagHighlight(moves: readonly MoveData[], currentMoveIndex: number): void {
     delete this.container.dataset.nagHighlight;
 
     if (currentMoveIndex <= 0) return;
@@ -390,10 +352,6 @@ export class BoardManager {
     const highlightName = nagClass.replace('nag-', '');
     this.container.dataset.nagHighlight = highlightName;
   }
-
-  // ===========================================================================
-  // BOARD SIZE
-  // ===========================================================================
 
   private applyBoardSize(): void {
     if (!this.boardEl) return;
@@ -415,15 +373,10 @@ export class BoardManager {
       }
     });
 
-    // Always observe so move list height stays synced
     if (this.boardEl && this.resizeObserver) {
       this.resizeObserver.observe(this.boardEl);
     }
   }
-
-  // ===========================================================================
-  // THEME / APPEARANCE
-  // ===========================================================================
 
   applyTheme(): void {
     const theme = this.settings.boardTheme;
@@ -441,7 +394,6 @@ export class BoardManager {
 
     this.container.dataset.theme = theme;
 
-    // Generate board SVG dynamically for ALL themes
     const lightHex = colors.light.replace('#', '%23');
     const darkHex = colors.dark.replace('#', '%23');
     const svg = this.generateBoardSvg(lightHex, darkHex);
@@ -454,7 +406,6 @@ export class BoardManager {
 
   applyPieceSet(): void {
     this.container.dataset.pieceSet = this.settings.pieceSet;
-    // Everything is now handled by CSS
   }
 
   private generateBoardSvg(light: string, dark: string): string {
@@ -469,16 +420,8 @@ export class BoardManager {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" shape-rendering="crispEdges"><rect width="8" height="8" fill="${light}"/><g fill="${dark}">${darkSquares.join('')}</g></svg>`;
   }
 
-  // ===========================================================================
-  // PROMOTION DIALOG
-  // ===========================================================================
-
-  /**
-   * Check if a move is a promotion and show dialog if so.
-   * Returns the chosen promotion piece letter, or 'q' for non-promotions.
-   */
   async getPromotion(chess: Chess, orig: Key, dest: Key): Promise<string> {
-    const validMoves = chess.moves({ verbose: true }) as ChessMove[];
+    const validMoves = chess.moves({ verbose: true });
 
     const isPromotion = validMoves.some(
       (m) => m.from === orig && m.to === dest && m.flags.includes('p')
@@ -505,13 +448,12 @@ export class BoardManager {
 
       const dialog = overlay.createDiv({ cls: 'cv-promotion-dialog' });
 
-      // Position near the promotion square
       const pos = squareToPosition(square, this.isFlipped);
       if (pos) {
-        dialog.style.left = `${pos.x + 6.25}%`;
+        dialog.style.left = `${pos.x + SQUARE_SIZE_PERCENT / 2}%`;
         dialog.style.top = this.isFlipped
           ? `${pos.y}%`
-          : `${Math.max(0, pos.y - 37.5)}%`;
+          : `${Math.max(0, pos.y - SQUARE_SIZE_PERCENT * 3)}%`;
       }
 
       const pieceNames: Record<string, string> = {
@@ -526,24 +468,19 @@ export class BoardManager {
           cls: `cv-promotion-piece piece ${color} ${pieceNames[piece]}`,
           attr: { 'aria-label': pieceNames[piece], title: pieceNames[piece] }
         });
-        btn.onclick = (e) => {
+        btn.onclick = (e: MouseEvent) => {
           e.stopPropagation();
           overlay.remove();
           resolve(piece);
         };
       }
 
-      // Click outside to cancel (default queen)
       overlay.onclick = () => {
         overlay.remove();
         resolve('q');
       };
     });
   }
-
-  // ===========================================================================
-  // CLEANUP
-  // ===========================================================================
 
   destroy(): void {
     delete this.container.dataset.nagHighlight;
