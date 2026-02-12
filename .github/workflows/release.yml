@@ -29,8 +29,10 @@ jobs:
             --exclude='main.js' \
             --exclude='.git' \
             --exclude='*.map' \
-            --file="chessview-source-${{ steps.version.outputs.VERSION }}.tar.gz" \
+            --exclude='chessview-source-*.tar.gz' \
+            --file="/tmp/chessview-source-${{ steps.version.outputs.VERSION }}.tar.gz" \
             .
+          mv "/tmp/chessview-source-${{ steps.version.outputs.VERSION }}.tar.gz" .
       - uses: softprops/action-gh-release@v2
         with:
           files: |
