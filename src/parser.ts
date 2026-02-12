@@ -371,26 +371,26 @@ export function parseMovesFromPgn(
 
       try {
         const result = chess.move(moveStr, { sloppy: true });
-        if (result) {
-          const moveData: MoveData = {
-            san: result.san,
-            from: result.from,
-            to: result.to,
-            fen: chess.fen(),
-            comment: pendingComment,
-            nag: pendingNag,
-            annotations: pendingAnnotation
-          };
+        if (!result) continue;  // change from if (result) { ... } to guard clause
+  
+        const moveData: MoveData = {
+          san: result.san,
+          from: result.from,
+          to: result.to,
+          fen: chess.fen(),
+          comment: pendingComment,
+          nag: pendingNag,
+          annotations: pendingAnnotation
+        };
 
-          if (inlineNag && NAG_SYMBOLS[inlineNag]) {
-            moveData.nag = NAG_SYMBOLS[inlineNag].symbol;
-          }
-
-          moves.push(moveData);
-          pendingComment = undefined;
-          pendingAnnotation = undefined;
-          pendingNag = undefined;
+        if (inlineNag && NAG_SYMBOLS[inlineNag]) {
+          moveData.nag = NAG_SYMBOLS[inlineNag].symbol;
         }
+
+        moves.push(moveData);
+        pendingComment = undefined;
+        pendingAnnotation = undefined;
+        pendingNag = undefined;
       } catch {
         if (warnings) {
           warnings.push(

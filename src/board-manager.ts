@@ -430,12 +430,12 @@ export class BoardManager {
   applyTheme(): void {
     const theme = this.settings.boardTheme;
     const colors =
-      theme === 'custom'
-        ? {
-          light: this.settings.lightSquareColor,
-          dark: this.settings.darkSquareColor
-        }
-        : BOARD_THEMES[theme];
+    theme === 'custom'
+      ? {
+        light: this.settings.lightSquareColor,
+        dark: this.settings.darkSquareColor
+      }
+      : BOARD_THEMES[theme] ?? BOARD_THEMES['brown'];
 
     this.container.style.setProperty('--cv-light', colors.light);
     this.container.style.setProperty('--cv-dark', colors.dark);

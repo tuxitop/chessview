@@ -349,8 +349,8 @@ export class PuzzleController {
 
     if (this.data.fen) {
       const parts = this.data.fen.split(/\s+/);
-      if (parts[5]) startMoveNum = parseInt(parts[5]) || 1;
-      if (parts[1] === 'b') startIsBlack = true;
+      startMoveNum = parseInt(parts[5] ?? '1') || 1;
+      startIsBlack = parts[1] === 'b';
     }
 
     let moveNum = startMoveNum;

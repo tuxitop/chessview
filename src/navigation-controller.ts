@@ -407,8 +407,13 @@ export class NavigationController {
     }
 
     const move = this.moves[this.currentMoveIndex - 1];
-    const hasNag = move?.nag;
-    const hasComment = move?.comment;
+    if (!move) {
+      this.commentEl.addClass('hidden');
+      return;
+    }
+
+    const hasNag = !!move.nag;
+    const hasComment = !!move.comment;
 
     if (!hasNag && !hasComment) {
       this.commentEl.addClass('hidden');
@@ -417,12 +422,12 @@ export class NavigationController {
 
     this.commentEl.removeClass('hidden');
 
-    if (hasNag) {
-      const nagClass = NAG_CLASSES[move.nag!] || '';
+    if (hasNag && move.nag) {
+      const nagClass = NAG_CLASSES[move.nag] || '';
       const nagInfo = Object.values(NAG_SYMBOLS).find(
         (n) => n.symbol === move.nag
       );
-      const label = nagInfo ? nagInfo.label : move.nag!;
+      const label = nagInfo ? nagInfo.label : move.nag;
 
       this.commentEl.createSpan({
         cls: `cv-comment-nag ${nagClass}`,
@@ -430,10 +435,10 @@ export class NavigationController {
       });
     }
 
-    if (hasComment) {
+    if (hasComment && move.comment) {
       this.commentEl.createSpan({
         cls: 'cv-comment-text',
-        text: move.comment!
+        text: move.comment
       });
     }
   }
