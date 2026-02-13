@@ -8,7 +8,8 @@ import {
   MoveData,
   FIGURINE_NOTATION,
   NAG_SYMBOLS,
-  NAG_CLASSES
+  NAG_CLASSES,
+  UI_LABELS
 } from './types';
 import { BoardManager } from './board-manager';
 import { getValidMoves } from './utils';
@@ -73,7 +74,7 @@ export class NavigationController {
     this.branchOverlayEl = boardSection.createDiv({ cls: 'cv-branch-overlay' });
     const returnBtn = this.branchOverlayEl.createEl('button', {
       cls: 'cv-branch-return',
-      text: '↩ Return to main line'
+      text: UI_LABELS.returnToMainLine
     });
     returnBtn.onclick = () => this.returnToMainLine();
   }
@@ -259,8 +260,8 @@ export class NavigationController {
     if (this.isPlaying) return;
     this.isPlaying = true;
     if (this.playBtnEl) {
-      this.playBtnEl.textContent = '⏸';
-      this.playBtnEl.setAttribute('title', 'Pause (Space)');
+      this.playBtnEl.textContent = UI_LABELS.pause;
+      this.playBtnEl.setAttribute('title', UI_LABELS.pauseTooltip);
     }
     this.playInterval = setInterval(() => {
       if (this.currentMoveIndex >= this.moves.length) {
@@ -274,8 +275,8 @@ export class NavigationController {
   stopAutoPlay(): void {
     this.isPlaying = false;
     if (this.playBtnEl) {
-      this.playBtnEl.textContent = '▶';
-      this.playBtnEl.setAttribute('title', 'Play (Space)');
+      this.playBtnEl.textContent = UI_LABELS.play;
+      this.playBtnEl.setAttribute('title', UI_LABELS.playTooltip);
     }
     if (this.playInterval) {
       clearInterval(this.playInterval);

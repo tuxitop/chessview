@@ -9,7 +9,8 @@ import {
   FIGURINE_NOTATION,
   PUZZLE_OPPONENT_FIRST_MOVE_DELAY,
   PUZZLE_OPPONENT_RESPONSE_DELAY,
-  HINT_HIGHLIGHT_DURATION
+  HINT_HIGHLIGHT_DURATION,
+  UI_LABELS
 } from './types';
 import { BoardManager } from './board-manager';
 
@@ -239,19 +240,19 @@ export class PuzzleController {
     switch (this.state) {
     case 'waiting':
       this.statusEl.addClass('waiting');
-      this.statusEl.textContent = 'Watch...';
+      this.statusEl.textContent = UI_LABELS.puzzleWaiting;
       break;
     case 'playing':
       this.statusEl.addClass('playing');
-      this.statusEl.textContent = `${playerLabel} to move — your turn`;
+      this.statusEl.textContent = UI_LABELS.puzzlePlaying(playerLabel);
       break;
     case 'solved':
       this.statusEl.addClass('success');
-      this.statusEl.textContent = '✓ Puzzle solved!';
+      this.statusEl.textContent = UI_LABELS.puzzleSolved;
       break;
     case 'failed':
       this.statusEl.addClass('failed');
-      this.statusEl.textContent = '✗ Incorrect';
+      this.statusEl.textContent = UI_LABELS.puzzleFailed;
       break;
     }
 
@@ -269,7 +270,7 @@ export class PuzzleController {
     ) {
       const retryBtn = this.puzzleButtonsEl.createEl('button', {
         cls: 'cv-btn cv-puzzle-btn',
-        text: '↺ Retry'
+        text: UI_LABELS.retry
       });
       retryBtn.onclick = () => this.retry();
     }
@@ -277,7 +278,7 @@ export class PuzzleController {
     if (this.state === 'playing' && this.settings.puzzleShowHints) {
       const hintBtn = this.puzzleButtonsEl.createEl('button', {
         cls: 'cv-btn cv-puzzle-btn cv-hint-btn',
-        text: '💡 Hint'
+        text: UI_LABELS.hint
       });
       hintBtn.onclick = () => this.showHint();
     }
@@ -286,13 +287,13 @@ export class PuzzleController {
       if (this.solutionRevealed) {
         const hideBtn = this.puzzleButtonsEl.createEl('button', {
           cls: 'cv-btn cv-puzzle-btn',
-          text: '🙈 Hide solution'
+          text: UI_LABELS.hideSolution
         });
         hideBtn.onclick = () => this.hideSolution();
       } else {
         const solBtn = this.puzzleButtonsEl.createEl('button', {
           cls: 'cv-btn cv-puzzle-btn',
-          text: '👁 Show solution'
+          text: UI_LABELS.showSolution
         });
         solBtn.onclick = () => this.showSolution();
       }
@@ -308,7 +309,7 @@ export class PuzzleController {
     if (this.solutionRevealed) {
       this.renderMoveRows(list, this.data.solutionMoves, true);
     } else if (this.playedMoves.length === 0) {
-      list.createDiv({ cls: 'cv-moves-empty', text: 'Solve the puzzle...' });
+      list.createDiv({ cls: 'cv-moves-empty', text: UI_LABELS.solvePuzzle });
     } else {
       this.renderMoveRows(list, this.playedMoves, false);
     }

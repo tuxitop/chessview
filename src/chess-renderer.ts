@@ -6,7 +6,8 @@ import {
   ChessViewSettings,
   ParsedChessData,
   COPY_FEEDBACK_DURATION,
-  COPY_FAILURE_DURATION
+  COPY_FAILURE_DURATION,
+  UI_LABELS
 } from './types';
 import { generateAnalysisUrls } from './parser';
 import { BoardManager } from './board-manager';
@@ -169,7 +170,7 @@ export class ChessRenderer {
 
   private renderError(message: string): void {
     const errorContainer = this.container.createDiv({ cls: 'cv-error' });
-    errorContainer.createEl('strong', { text: '⚠️ Error' });
+    errorContainer.createEl('strong', { text: UI_LABELS.errorTitle });
     errorContainer.createEl('p', { text: message });
     const details = errorContainer.createEl('details');
     details.createEl('summary', { text: 'Details' });
@@ -214,7 +215,7 @@ export class ChessRenderer {
       if (result && result !== '*') parts.push(result);
 
       headerText.textContent =
-        parts.length > 0 ? parts.join(' • ') : 'Chess position';
+        parts.length > 0 ? parts.join(' • ') : UI_LABELS.defaultHeader;
     }
   }
 
@@ -224,27 +225,39 @@ export class ChessRenderer {
     const leftGroup = footer.createDiv({ cls: 'cv-footer-left' });
 
     if (!this.data.isPuzzle && this.nav && this.nav.moveCount > 0) {
-      this.createControlBtn(leftGroup, '⏮', 'First move (Home)', () =>
-        this.nav!.goToStart()
+      this.createControlBtn(
+        leftGroup,
+        UI_LABELS.firstMove,
+        UI_LABELS.firstMoveTooltip,
+        () => this.nav!.goToStart()
       );
-      this.createControlBtn(leftGroup, '◀', 'Previous move (←)', () =>
-        this.nav!.goBack()
+      this.createControlBtn(
+        leftGroup,
+        UI_LABELS.previousMove,
+        UI_LABELS.previousMoveTooltip,
+        () => this.nav!.goBack()
       );
 
       const playBtn = this.createControlBtn(
         leftGroup,
-        '▶',
-        'Play (Space)',
+        UI_LABELS.play,
+        UI_LABELS.playTooltip,
         () => this.nav!.toggleAutoPlay()
       );
       playBtn.addClass('cv-play-btn');
       this.nav.setPlayBtnEl(playBtn);
 
-      this.createControlBtn(leftGroup, '▶', 'Next move (→)', () =>
-        this.nav!.goForward()
+      this.createControlBtn(
+        leftGroup,
+        UI_LABELS.nextMove,
+        UI_LABELS.nextMoveTooltip,
+        () => this.nav!.goForward()
       );
-      this.createControlBtn(leftGroup, '⏭', 'Last move (End)', () =>
-        this.nav!.goToEnd()
+      this.createControlBtn(
+        leftGroup,
+        UI_LABELS.lastMove,
+        UI_LABELS.lastMoveTooltip,
+        () => this.nav!.goToEnd()
       );
 
       const counterEl = leftGroup.createSpan({ cls: 'cv-counter' });
@@ -253,20 +266,17 @@ export class ChessRenderer {
 
     const rightGroup = footer.createDiv({ cls: 'cv-footer-right' });
 
-    this.createControlBtn(rightGroup, '⇅', 'Flip board (F)', () => {
+    this.createControlBtn(rightGroup, UI_LABELS.flipBoard, UI_LABELS.flipTooltip, () => {
       this.isFlipped = !this.isFlipped;
       this.board?.flipBoard();
       if (this.nav) {
-        this.board?.updateNagOverlay(
-          this.nav.currentMoves,
-          this.nav.currentIndex
-        );
+        this.board?.updateNagOverlay(this.nav.currentMoves, this.nav.currentIndex);
       }
     });
 
     const copyBtn = rightGroup.createEl('button', {
       cls: 'cv-action-btn',
-      attr: { 'aria-label': 'Copy', title: 'Copy to clipboard' }
+      attr: { 'aria-label': 'Copy', title: UI_LABELS.copyTooltip }
     });
     this.createCopyIcon(copyBtn);
     copyBtn.onclick = () => {

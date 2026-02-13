@@ -236,6 +236,47 @@ export const ANNOTATION_COLORS: Record<string, string> = {
 };
 
 // ============================================================================
+// UI LABELS
+// ============================================================================
+
+export const UI_LABELS = {
+  // Navigation
+  firstMove: '⏮',
+  previousMove: '◀',
+  nextMove: '▶',
+  lastMove: '⏭',
+  play: '▶',
+  pause: '⏸',
+  flipBoard: '⇅',
+  returnToMainLine: '↩ Return to main line',
+
+  // Navigation tooltips
+  firstMoveTooltip: 'First move (Home)',
+  previousMoveTooltip: 'Previous move (←)',
+  nextMoveTooltip: 'Next move (→)',
+  lastMoveTooltip: 'Last move (End)',
+  playTooltip: 'Play (space)',
+  pauseTooltip: 'Pause (space)',
+  flipTooltip: 'Flip board',
+  copyTooltip: 'Copy to clipboard',
+
+  // Puzzle
+  puzzleWaiting: 'Watch...',
+  puzzlePlaying: (color: string) => `${color} to move — your turn`,
+  puzzleSolved: '✓ Puzzle solved!',
+  puzzleFailed: '✗ Incorrect',
+  retry: '↺ Retry',
+  hint: '💡 Hint',
+  showSolution: '👁 Show solution',
+  hideSolution: '🙈 Hide solution',
+  solvePuzzle: 'Solve the puzzle...',
+
+  // General
+  errorTitle: '⚠️ Error',
+  defaultHeader: 'Chess position',
+} as const;
+
+// ============================================================================
 // TIMING CONSTANTS
 // ============================================================================
 

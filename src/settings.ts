@@ -292,7 +292,7 @@ export class ChessViewSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Show analysis links')
-      .setDesc('Display links to Lichess and Chess.com analysis')
+      .setDesc('Display links to lichess.org and chess.com analysis')
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.showAnalysisLinks)
