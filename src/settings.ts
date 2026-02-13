@@ -38,7 +38,7 @@ export class ChessViewSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
           .addOptions({
-            brown: 'Brown (Classic)',
+            brown: 'Brown (classic)',
             blue: 'Blue',
             green: 'Green',
             purple: 'Purple',
@@ -127,7 +127,6 @@ export class ChessViewSettingTab extends PluginSettingTab {
             kosal: 'Kosal',
             leipzig: 'Leipzig',
             maestro: 'Maestro',
-            monarchy: 'Monarchy',
             staunty: 'Staunty',
             tatiana: 'Tatiana',
             chess7: 'Chess7'
@@ -355,7 +354,7 @@ export class ChessViewSettingTab extends PluginSettingTab {
             Object.assign(this.plugin.settings, DEFAULT_SETTINGS);
             void this.plugin.saveSettings();
             this.display();
-            new Notice('ChessView settings reset to defaults');
+            new Notice('Plugin settings reset to defaults');
           })
       );
   }

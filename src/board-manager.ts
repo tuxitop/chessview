@@ -105,7 +105,7 @@ export class BoardManager {
     lastMove: MoveData | null,
     options?: {
       movable?: Config['movable'];
-      moves?: MoveData[];
+      moves?: readonly MoveData[];
       currentMoveIndex?: number;
     }
   ): void {
@@ -133,7 +133,7 @@ export class BoardManager {
   syncAfterMove(
     chess: Chess,
     move: ChessMove,
-    moves: MoveData[],
+    moves: readonly MoveData[],
     currentMoveIndex: number
   ): void {
     if (!this.ground) return;
@@ -155,7 +155,7 @@ export class BoardManager {
     });
   }
 
-  syncPuzzleBoard(chess: Chess, playedMoves: MoveData[]): void {
+  syncPuzzleBoard(chess: Chess, playedMoves: readonly MoveData[]): void {
     if (!this.ground) return;
 
     const inCheck = isInCheck(chess);
@@ -227,7 +227,7 @@ export class BoardManager {
   }
 
   getAutoShapes(
-    moves: MoveData[] | null,
+    moves: readonly MoveData[] | null,
     currentMoveIndex: number
   ): BoardShape[] {
     const shapes: BoardShape[] = [];
@@ -282,13 +282,13 @@ export class BoardManager {
     return shapes;
   }
 
-  setAutoShapes(shapes: BoardShape[]): void {
-    this.ground?.setAutoShapes(shapes);
+  setAutoShapes(shapes: readonly BoardShape[]): void {
+    this.ground?.setAutoShapes([...shapes]);
   }
 
   showHintHighlight(
     square: string,
-    moves: MoveData[] | null,
+    moves: readonly MoveData[] | null,
     currentMoveIndex: number,
     durationMs: number
   ): void {
@@ -338,7 +338,10 @@ export class BoardManager {
     });
   }
 
-  updateNagHighlight(moves: readonly MoveData[], currentMoveIndex: number): void {
+  updateNagHighlight(
+    moves: readonly MoveData[],
+    currentMoveIndex: number
+  ): void {
     delete this.container.dataset.nagHighlight;
 
     if (currentMoveIndex <= 0) return;

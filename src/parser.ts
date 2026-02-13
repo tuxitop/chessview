@@ -1,3 +1,4 @@
+// src/parser.ts
 import { Chess } from 'chess.js';
 import { stripVariations } from './utils';
 import {
@@ -177,7 +178,7 @@ function parseGame(source: string, result: ParsedChessData): ParsedChessData {
   const cleanedForDetection = chessData
     .replace(/\[[^\]]*"[^\]]*\]/g, '')
     .trim();
-  const firstToken = cleanedForDetection.split(/\s+/)[0] || '';
+  const firstToken = cleanedForDetection.split(/\s+/)[0] ?? '';
   const isFen =
     !hasPgnHeaders &&
     firstToken.split('/').length === 8 &&
@@ -263,7 +264,7 @@ function parseAnnotationMarker(marker: string, result: ParsedChessData): void {
       from: arrowMatch[1].toLowerCase(),
       to: arrowMatch[2].toLowerCase(),
       color: arrowMatch[3]
-        ? ANNOTATION_COLORS[arrowMatch[3]] || arrowMatch[3]
+        ? ANNOTATION_COLORS[arrowMatch[3]] ?? arrowMatch[3]
         : undefined
     });
   }
@@ -275,7 +276,7 @@ function parseAnnotationMarker(marker: string, result: ParsedChessData): void {
     result.circles.push({
       square: circleMatch[1].toLowerCase(),
       color: circleMatch[2]
-        ? ANNOTATION_COLORS[circleMatch[2]] || circleMatch[2]
+        ? ANNOTATION_COLORS[circleMatch[2]] ?? circleMatch[2]
         : undefined
     });
   }
@@ -287,7 +288,7 @@ function parseAnnotationMarker(marker: string, result: ParsedChessData): void {
     result.highlights.push({
       square: highlightMatch[1].toLowerCase(),
       color: highlightMatch[2]
-        ? ANNOTATION_COLORS[highlightMatch[2]] || highlightMatch[2]
+        ? ANNOTATION_COLORS[highlightMatch[2]] ?? highlightMatch[2]
         : undefined
     });
   }
@@ -371,8 +372,8 @@ export function parseMovesFromPgn(
 
       try {
         const result = chess.move(moveStr, { sloppy: true });
-        if (!result) continue;  // change from if (result) { ... } to guard clause
-  
+        if (!result) continue;
+
         const moveData: MoveData = {
           san: result.san,
           from: result.from,
@@ -421,7 +422,7 @@ export function parseCommentAnnotations(comment: string): MoveAnnotation {
           from: m[2].toLowerCase(),
           to: m[3].toLowerCase(),
           color: m[1]
-            ? ANNOTATION_COLORS[m[1].toUpperCase()] || 'green'
+            ? ANNOTATION_COLORS[m[1].toUpperCase()] ?? 'green'
             : 'green'
         });
       }
@@ -437,7 +438,7 @@ export function parseCommentAnnotations(comment: string): MoveAnnotation {
         annotation.circles.push({
           square: m[2].toLowerCase(),
           color: m[1]
-            ? ANNOTATION_COLORS[m[1].toUpperCase()] || 'green'
+            ? ANNOTATION_COLORS[m[1].toUpperCase()] ?? 'green'
             : 'green'
         });
       }
@@ -464,11 +465,11 @@ export function normalizeFen(fen: string): string {
   if (parts.length === 0 || parts[0].split('/').length !== 8) return fen;
 
   const position = parts[0];
-  const turn = parts[1] || 'w';
-  const castling = parts[2] || '-';
-  const enPassant = parts[3] || '-';
-  const halfMove = parts[4] || '0';
-  const fullMove = parts[5] || '1';
+  const turn = parts[1] ?? 'w';
+  const castling = parts[2] ?? '-';
+  const enPassant = parts[3] ?? '-';
+  const halfMove = parts[4] ?? '0';
+  const fullMove = parts[5] ?? '1';
 
   return `${position} ${turn} ${castling} ${enPassant} ${halfMove} ${fullMove}`;
 }

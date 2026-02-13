@@ -259,6 +259,22 @@ export const UI_LABELS = {
   pauseTooltip: 'Pause (space)',
   flipTooltip: 'Flip board',
   copyTooltip: 'Copy to clipboard',
+  copyAriaLabel: 'Copy',
+
+  // Header
+  puzzleLabel: 'Puzzle',
+  defaultPuzzleInfo: 'Solve the puzzle',
+  ratingPrefix: 'Rating: ',
+  defaultHeader: 'Chess position',
+
+  // Error
+  errorTitle: '⚠️ Error',
+  errorDetails: 'Details',
+  errorNoInput: 'No input',
+
+  // Analysis links
+  lichessLabel: 'Lichess',
+  chessComLabel: 'Chess.com',
 
   // Puzzle
   puzzleWaiting: 'Watch...',
@@ -270,10 +286,9 @@ export const UI_LABELS = {
   showSolution: '👁 Show solution',
   hideSolution: '🙈 Hide solution',
   solvePuzzle: 'Solve the puzzle...',
-
-  // General
-  errorTitle: '⚠️ Error',
-  defaultHeader: 'Chess position',
+  movePlaceholder: '...',
+  playerWhite: 'White',
+  playerBlack: 'Black',
 } as const;
 
 // ============================================================================

@@ -173,9 +173,9 @@ export class ChessRenderer {
     errorContainer.createEl('strong', { text: UI_LABELS.errorTitle });
     errorContainer.createEl('p', { text: message });
     const details = errorContainer.createEl('details');
-    details.createEl('summary', { text: 'Details' });
+    details.createEl('summary', { text: UI_LABELS.errorDetails });
     const pre = details.createEl('pre');
-    pre.textContent = this.data.fen || this.data.pgn || 'No input';
+    pre.textContent = this.data.fen || this.data.pgn || UI_LABELS.errorNoInput;
   }
 
   private renderHeader(container: HTMLElement): void {
@@ -183,12 +183,12 @@ export class ChessRenderer {
     const headerText = header.createSpan({ cls: 'cv-header-text' });
 
     if (this.data.isPuzzle) {
-      headerText.createSpan({ cls: 'cv-header-label', text: 'Puzzle' });
+      headerText.createSpan({ cls: 'cv-header-label', text: UI_LABELS.puzzleLabel });
 
       const infoParts: string[] = [];
       if (this.data.puzzleTitle) infoParts.push(this.data.puzzleTitle);
       if (this.data.puzzleRating)
-        infoParts.push(`Rating: ${this.data.puzzleRating}`);
+        infoParts.push(`${UI_LABELS.ratingPrefix}${this.data.puzzleRating}`);
       if (this.data.puzzleThemes.length > 0)
         infoParts.push(this.data.puzzleThemes.join(', '));
 
@@ -196,7 +196,7 @@ export class ChessRenderer {
       if (event && event !== '?') infoParts.push(event);
 
       headerText.appendText(
-        infoParts.length > 0 ? infoParts.join(' • ') : 'Solve the puzzle'
+        infoParts.length > 0 ? infoParts.join(' • ') : UI_LABELS.defaultPuzzleInfo
       );
     } else {
       const parts: string[] = [];
@@ -276,7 +276,7 @@ export class ChessRenderer {
 
     const copyBtn = rightGroup.createEl('button', {
       cls: 'cv-action-btn',
-      attr: { 'aria-label': 'Copy', title: UI_LABELS.copyTooltip }
+      attr: { 'aria-label': UI_LABELS.copyAriaLabel, title: UI_LABELS.copyTooltip }
     });
     this.createCopyIcon(copyBtn);
     copyBtn.onclick = () => {
@@ -287,13 +287,13 @@ export class ChessRenderer {
       const urls = generateAnalysisUrls(this.data);
       rightGroup.createEl('a', {
         cls: 'cv-action-link',
-        text: 'Lichess',
+        text: UI_LABELS.lichessLabel,
         href: urls.lichess,
         attr: { target: '_blank', rel: 'noopener' }
       });
       rightGroup.createEl('a', {
         cls: 'cv-action-link',
-        text: 'Chess.com',
+        text: UI_LABELS.chessComLabel,
         href: urls.chessCom,
         attr: { target: '_blank', rel: 'noopener' }
       });

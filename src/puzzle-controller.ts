@@ -235,7 +235,9 @@ export class PuzzleController {
     this.statusEl.empty();
     this.statusEl.removeClass('success', 'failed', 'waiting', 'playing');
 
-    const playerLabel = this.data.playerColor === 'white' ? 'White' : 'Black';
+    const playerLabel = this.data.playerColor === 'white'
+      ? UI_LABELS.playerWhite
+      : UI_LABELS.playerBlack;
 
     switch (this.state) {
     case 'waiting':
@@ -317,7 +319,7 @@ export class PuzzleController {
 
   private renderMoveRows(
     container: HTMLElement,
-    moves: MoveData[],
+    moves: readonly MoveData[],
     isSolution: boolean
   ): void {
     let startMoveNum = 1;
@@ -335,7 +337,7 @@ export class PuzzleController {
     if (startIsBlack && moves.length > 0) {
       const row = container.createDiv({ cls: 'cv-move-row' });
       row.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
-      row.createSpan({ cls: 'cv-move cv-move-placeholder', text: '...' });
+      row.createSpan({ cls: 'cv-move cv-move-placeholder', text: UI_LABELS.movePlaceholder });
 
       const move = moves[0];
       const cls = this.getPuzzleMoveClass(move, 0, isSolution);
@@ -388,7 +390,7 @@ export class PuzzleController {
 
   private formatMove(san: string): string {
     if (this.settings.notationType === 'figurine') {
-      return san.replace(/[KQRBN]/g, (m) => FIGURINE_NOTATION[m] || m);
+      return san.replace(/[KQRBN]/g, (m) => FIGURINE_NOTATION[m] ?? m);
     }
     return san;
   }

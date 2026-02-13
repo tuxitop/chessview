@@ -1,6 +1,6 @@
 // src/navigation-controller.ts
 import { Chess } from 'chess.js';
-import { Color, Key } from 'chessground/types';
+import { Key } from 'chessground/types';
 
 import {
   ChessViewSettings,
@@ -124,7 +124,7 @@ export class NavigationController {
       movable: isEditable
         ? {
           free: false,
-          color: 'both' as Color,
+          color: 'both',
           dests: getValidMoves(this.chess),
           showDests: true,
           events: {
@@ -323,7 +323,7 @@ export class NavigationController {
     span.createSpan({ text: this.formatMove(move.san) });
 
     if (move.nag) {
-      const nagClass = NAG_CLASSES[move.nag] || '';
+      const nagClass = NAG_CLASSES[move.nag] ?? '';
       span.createSpan({
         cls: `cv-move-nag ${nagClass}`,
         text: move.nag
@@ -335,7 +335,7 @@ export class NavigationController {
 
   private formatMove(san: string): string {
     if (this.settings.notationType === 'figurine') {
-      return san.replace(/[KQRBN]/g, (m) => FIGURINE_NOTATION[m] || m);
+      return san.replace(/[KQRBN]/g, (m) => FIGURINE_NOTATION[m] ?? m);
     }
     return san;
   }
@@ -384,7 +384,7 @@ export class NavigationController {
     this.commentEl.removeClass('hidden');
 
     if (hasNag && move.nag) {
-      const nagClass = NAG_CLASSES[move.nag] || '';
+      const nagClass = NAG_CLASSES[move.nag] ?? '';
       const nagInfo = Object.values(NAG_SYMBOLS).find(
         (n) => n.symbol === move.nag
       );
