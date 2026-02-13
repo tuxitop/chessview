@@ -29,9 +29,17 @@ export class PuzzleController {
   private solutionRevealed: boolean = false;
   private destroyed: boolean = false;
 
+  // Navigation state for reviewing played moves
+  private viewIndex: number = 0;
+
   private moveListEl: HTMLElement | null = null;
-  private statusEl: HTMLElement | null = null;
-  private puzzleButtonsEl: HTMLElement | null = null;
+  private headerStatusEl: HTMLElement | null = null;
+
+  // Footer button references for updating
+  private hintBtnEl: HTMLElement | null = null;
+  private solutionBtnEl: HTMLElement | null = null;
+  private retryBtnEl: HTMLElement | null = null;
+  private footerRightGroup: HTMLElement | null = null;
 
   constructor(
     chess: Chess,
@@ -47,26 +55,31 @@ export class PuzzleController {
     this.startFen = startFen;
   }
 
+  setHeaderStatusEl(el: HTMLElement): void {
+    this.headerStatusEl = el;
+  }
+
   createMoveList(movesSection: HTMLElement): void {
     this.moveListEl = movesSection.createDiv({ cls: 'cv-moves' });
   }
 
-  createPuzzleUI(container: HTMLElement): void {
-    const puzzleUI = container.createDiv({ cls: 'cv-puzzle-ui' });
-    this.statusEl = puzzleUI.createDiv({ cls: 'cv-puzzle-status' });
-    this.puzzleButtonsEl = puzzleUI.createDiv({ cls: 'cv-puzzle-buttons' });
+  createFooterButtons(rightGroup: HTMLElement): void {
+    this.footerRightGroup = rightGroup;
+    this.updateFooterButtons();
   }
 
   start(): void {
     this.state = 'waiting';
     this.moveIndex = 0;
+    this.viewIndex = 0;
     this.playedMoves = [];
     this.solutionRevealed = false;
     this.destroyed = false;
 
     this.chess.load(this.startFen);
     this.board.syncPuzzleBoard(this.chess, this.playedMoves);
-    this.updateStatus();
+    this.updateHeaderStatus();
+    this.updateFooterButtons();
     this.renderMoveList();
 
     const fenTurn = this.chess.turn() === 'w' ? 'white' : 'black';
@@ -79,7 +92,8 @@ export class PuzzleController {
     } else {
       this.state = 'playing';
       this.enableInput();
-      this.updateStatus();
+      this.updateHeaderStatus();
+      this.updateFooterButtons();
     }
   }
 
@@ -99,6 +113,7 @@ export class PuzzleController {
           fen: this.chess.fen()
         });
         this.moveIndex++;
+        this.viewIndex = this.playedMoves.length;
       }
     } catch (err) {
       console.warn(
@@ -114,11 +129,13 @@ export class PuzzleController {
     if (this.moveIndex < this.data.solutionMoves.length) {
       this.state = 'playing';
       this.enableInput();
-      this.updateStatus();
+      this.updateHeaderStatus();
+      this.updateFooterButtons();
     } else {
       this.state = 'solved';
       this.board.disableInput();
-      this.updateStatus();
+      this.updateHeaderStatus();
+      this.updateFooterButtons();
     }
   }
 
@@ -146,6 +163,7 @@ export class PuzzleController {
           fen: this.chess.fen()
         });
         this.moveIndex++;
+        this.viewIndex = this.playedMoves.length;
 
         this.board.syncPuzzleBoard(this.chess, this.playedMoves);
         this.renderMoveList();
@@ -153,11 +171,12 @@ export class PuzzleController {
         if (this.moveIndex >= this.data.solutionMoves.length) {
           this.state = 'solved';
           this.board.disableInput();
-          this.updateStatus();
+          this.updateHeaderStatus();
+          this.updateFooterButtons();
         } else {
           this.state = 'waiting';
           this.board.disableInput();
-          this.updateStatus();
+          this.updateHeaderStatus();
 
           setTimeout(() => {
             if (!this.destroyed) this.playOpponentMove();
@@ -174,10 +193,12 @@ export class PuzzleController {
           fen: '',
           comment: 'wrong'
         });
+        this.viewIndex = this.playedMoves.length;
 
         this.board.syncPuzzleBoard(this.chess, this.playedMoves);
         this.board.disableInput();
-        this.updateStatus();
+        this.updateHeaderStatus();
+        this.updateFooterButtons();
         this.renderMoveList();
       }
     } catch {
@@ -195,22 +216,66 @@ export class PuzzleController {
     );
   }
 
+  // Navigation methods for reviewing played moves
+  goToStart(): void {
+    this.goToView(0);
+  }
+
+  goToEnd(): void {
+    this.goToView(this.playedMoves.length);
+  }
+
+  goForward(): void {
+    this.goToView(this.viewIndex + 1);
+  }
+
+  goBack(): void {
+    this.goToView(this.viewIndex - 1);
+  }
+
+  private goToView(index: number): void {
+    const maxIndex = this.solutionRevealed
+      ? this.data.solutionMoves.length
+      : this.playedMoves.length;
+
+    index = Math.max(0, Math.min(maxIndex, index));
+    this.viewIndex = index;
+
+    // Replay to this position
+    this.chess.load(this.startFen);
+    const moves = this.solutionRevealed ? this.data.solutionMoves : this.playedMoves;
+    for (let i = 0; i < index; i++) {
+      if (moves[i].comment === 'wrong') break;
+      try {
+        this.chess.move(moves[i].san);
+      } catch {
+        break;
+      }
+    }
+
+    this.board.syncPuzzleBoard(this.chess, moves.slice(0, index));
+    this.updateMoveHighlights();
+  }
+
   private retry(): void {
     this.solutionRevealed = false;
     this.start();
-    this.updateButtons();
   }
 
   private showSolution(): void {
     this.solutionRevealed = true;
+    this.viewIndex = 0;
     this.renderMoveList();
-    this.updateButtons();
+    this.updateFooterButtons();
   }
 
   private hideSolution(): void {
     this.solutionRevealed = false;
+    this.viewIndex = this.playedMoves.length;
     this.renderMoveList();
-    this.updateButtons();
+    this.updateFooterButtons();
+    // Restore board to current played state
+    this.goToView(this.viewIndex);
   }
 
   showHint(): void {
@@ -230,10 +295,8 @@ export class PuzzleController {
     }
   }
 
-  private updateStatus(): void {
-    if (!this.statusEl) return;
-    this.statusEl.empty();
-    this.statusEl.removeClass('success', 'failed', 'waiting', 'playing');
+  private updateHeaderStatus(): void {
+    if (!this.headerStatusEl) return;
 
     const playerLabel = this.data.playerColor === 'white'
       ? UI_LABELS.playerWhite
@@ -241,77 +304,111 @@ export class PuzzleController {
 
     switch (this.state) {
     case 'waiting':
-      this.statusEl.addClass('waiting');
-      this.statusEl.textContent = UI_LABELS.puzzleWaiting;
+      this.headerStatusEl.textContent = UI_LABELS.puzzleHeaderWaiting;
+      this.headerStatusEl.className = 'cv-header-puzzle-status';
       break;
     case 'playing':
-      this.statusEl.addClass('playing');
-      this.statusEl.textContent = UI_LABELS.puzzlePlaying(playerLabel);
+      this.headerStatusEl.textContent = UI_LABELS.puzzleHeaderPlaying(playerLabel);
+      this.headerStatusEl.className = 'cv-header-puzzle-status';
       break;
     case 'solved':
-      this.statusEl.addClass('success');
-      this.statusEl.textContent = UI_LABELS.puzzleSolved;
+      this.headerStatusEl.textContent = UI_LABELS.puzzleHeaderSolved;
+      this.headerStatusEl.className = 'cv-header-puzzle-status cv-puzzle-solved';
       break;
     case 'failed':
-      this.statusEl.addClass('failed');
-      this.statusEl.textContent = UI_LABELS.puzzleFailed;
+      this.headerStatusEl.textContent = UI_LABELS.puzzleHeaderFailed;
+      this.headerStatusEl.className = 'cv-header-puzzle-status cv-puzzle-failed';
       break;
     }
-
-    this.updateButtons();
   }
 
-  private updateButtons(): void {
-    if (!this.puzzleButtonsEl) return;
-    this.puzzleButtonsEl.empty();
+  updateFooterButtons(): void {
+    if (!this.footerRightGroup) return;
 
-    if (
-      this.state === 'failed' ||
-      this.state === 'solved' ||
-      this.solutionRevealed
-    ) {
-      const retryBtn = this.puzzleButtonsEl.createEl('button', {
-        cls: 'cv-btn cv-puzzle-btn',
-        text: UI_LABELS.retry
-      });
-      retryBtn.onclick = () => this.retry();
-    }
+    // Remove old puzzle buttons
+    if (this.hintBtnEl) { this.hintBtnEl.remove(); this.hintBtnEl = null; }
+    if (this.solutionBtnEl) { this.solutionBtnEl.remove(); this.solutionBtnEl = null; }
+    if (this.retryBtnEl) { this.retryBtnEl.remove(); this.retryBtnEl = null; }
 
+    // Find the insertion point — before the flip button
+    const flipBtn = this.footerRightGroup.querySelector('.cv-btn:not(.cv-puzzle-action)');
+
+    // Hint button
     if (this.state === 'playing' && this.settings.puzzleShowHints) {
-      const hintBtn = this.puzzleButtonsEl.createEl('button', {
-        cls: 'cv-btn cv-puzzle-btn cv-hint-btn',
-        text: UI_LABELS.hint
-      });
-      hintBtn.onclick = () => this.showHint();
-    }
-
-    if (this.state !== 'solved') {
-      if (this.solutionRevealed) {
-        const hideBtn = this.puzzleButtonsEl.createEl('button', {
-          cls: 'cv-btn cv-puzzle-btn',
-          text: UI_LABELS.hideSolution
-        });
-        hideBtn.onclick = () => this.hideSolution();
+      this.hintBtnEl = this.createPuzzleActionBtn(
+        UI_LABELS.hintIcon,
+        UI_LABELS.hintTooltip,
+        () => this.showHint()
+      );
+      if (flipBtn) {
+        this.footerRightGroup.insertBefore(this.hintBtnEl, flipBtn);
       } else {
-        const solBtn = this.puzzleButtonsEl.createEl('button', {
-          cls: 'cv-btn cv-puzzle-btn',
-          text: UI_LABELS.showSolution
-        });
-        solBtn.onclick = () => this.showSolution();
+        this.footerRightGroup.appendChild(this.hintBtnEl);
       }
     }
+
+    // Solution button
+    if (this.state !== 'solved') {
+      if (this.solutionRevealed) {
+        this.solutionBtnEl = this.createPuzzleActionBtn(
+          UI_LABELS.hideSolutionIcon,
+          UI_LABELS.hideSolutionTooltip,
+          () => this.hideSolution()
+        );
+      } else {
+        this.solutionBtnEl = this.createPuzzleActionBtn(
+          UI_LABELS.showSolutionIcon,
+          UI_LABELS.showSolutionTooltip,
+          () => this.showSolution()
+        );
+      }
+      if (flipBtn) {
+        this.footerRightGroup.insertBefore(this.solutionBtnEl, flipBtn);
+      } else {
+        this.footerRightGroup.appendChild(this.solutionBtnEl);
+      }
+    }
+
+    // Retry button
+    if (this.state === 'failed' || this.state === 'solved' || this.solutionRevealed) {
+      this.retryBtnEl = this.createPuzzleActionBtn(
+        UI_LABELS.retryIcon,
+        UI_LABELS.retryTooltip,
+        () => this.retry()
+      );
+      if (flipBtn) {
+        this.footerRightGroup.insertBefore(this.retryBtnEl, flipBtn);
+      } else {
+        this.footerRightGroup.appendChild(this.retryBtnEl);
+      }
+    }
+  }
+
+  private createPuzzleActionBtn(
+    icon: string,
+    tooltip: string,
+    onClick: () => void
+  ): HTMLElement {
+    const btn = document.createElement('button');
+    btn.className = 'cv-btn cv-puzzle-action';
+    btn.setAttribute('aria-label', tooltip);
+    btn.setAttribute('title', tooltip);
+    btn.textContent = icon;
+    btn.onclick = onClick;
+    return btn;
   }
 
   renderMoveList(): void {
     if (!this.moveListEl) return;
     this.moveListEl.empty();
 
-    const list = this.moveListEl.createDiv({ cls: 'cv-moves-list' });
+    const list = this.moveListEl.createDiv({ cls: 'cv-moves-grid' });
 
     if (this.solutionRevealed) {
       this.renderMoveRows(list, this.data.solutionMoves, true);
     } else if (this.playedMoves.length === 0) {
-      list.createDiv({ cls: 'cv-moves-empty', text: UI_LABELS.solvePuzzle });
+      const empty = list.createDiv({ cls: 'cv-moves-empty', text: UI_LABELS.solvePuzzle });
+      empty.style.gridColumn = '1 / -1';
     } else {
       this.renderMoveRows(list, this.playedMoves, false);
     }
@@ -335,35 +432,40 @@ export class PuzzleController {
     let i = 0;
 
     if (startIsBlack && moves.length > 0) {
-      const row = container.createDiv({ cls: 'cv-move-row' });
-      row.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
-      row.createSpan({ cls: 'cv-move cv-move-placeholder', text: UI_LABELS.movePlaceholder });
+      container.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
+      container.createSpan({ cls: 'cv-move-placeholder', text: UI_LABELS.movePlaceholder });
 
       const move = moves[0];
       const cls = this.getPuzzleMoveClass(move, 0, isSolution);
-      const span = row.createSpan({ cls });
+      const span = container.createSpan({ cls });
       span.createSpan({ text: this.formatMove(move.san) });
+      span.onclick = () => this.goToView(1);
 
       i = 1;
       moveNum++;
     }
 
     while (i < moves.length) {
-      const row = container.createDiv({ cls: 'cv-move-row' });
-      row.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
+      container.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
 
       const wMove = moves[i];
       const wCls = this.getPuzzleMoveClass(wMove, i, isSolution);
-      const wSpan = row.createSpan({ cls: wCls });
+      const wSpan = container.createSpan({ cls: wCls });
       wSpan.createSpan({ text: this.formatMove(wMove.san) });
+      const wIdx = i + 1;
+      wSpan.onclick = () => this.goToView(wIdx);
       i++;
 
       if (i < moves.length) {
         const bMove = moves[i];
         const bCls = this.getPuzzleMoveClass(bMove, i, isSolution);
-        const bSpan = row.createSpan({ cls: bCls });
+        const bSpan = container.createSpan({ cls: bCls });
         bSpan.createSpan({ text: this.formatMove(bMove.san) });
+        const bIdx = i + 1;
+        bSpan.onclick = () => this.goToView(bIdx);
         i++;
+      } else {
+        container.createSpan({ cls: 'cv-move-empty' });
       }
 
       moveNum++;
@@ -376,6 +478,9 @@ export class PuzzleController {
     isSolution: boolean
   ): string {
     const classes = ['cv-move'];
+
+    if (index === this.viewIndex - 1) classes.push('active');
+
     if (move.comment === 'wrong') {
       classes.push('cv-move-wrong');
     } else if (isSolution) {
@@ -388,6 +493,18 @@ export class PuzzleController {
     return classes.join(' ');
   }
 
+  private updateMoveHighlights(): void {
+    if (!this.moveListEl) return;
+    const moves = this.moveListEl.querySelectorAll('.cv-move');
+    moves.forEach((el, i) => {
+      el.removeClass('active');
+      if (i === this.viewIndex - 1) {
+        el.addClass('active');
+        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }
+
   private formatMove(san: string): string {
     if (this.settings.notationType === 'figurine') {
       return san.replace(/[KQRBN]/g, (m) => FIGURINE_NOTATION[m] ?? m);
@@ -398,8 +515,11 @@ export class PuzzleController {
   destroy(): void {
     this.destroyed = true;
     this.moveListEl = null;
-    this.statusEl = null;
-    this.puzzleButtonsEl = null;
+    this.headerStatusEl = null;
+    this.hintBtnEl = null;
+    this.solutionBtnEl = null;
+    this.retryBtnEl = null;
+    this.footerRightGroup = null;
   }
 
   get currentState(): PuzzleState {

@@ -2,7 +2,7 @@
 import {
   Plugin,
   MarkdownPostProcessorContext,
-  MarkdownRenderChild
+  MarkdownRenderChild,
 } from 'obsidian';
 import { ChessViewSettings, DEFAULT_SETTINGS } from './types';
 import { ChessViewSettingTab } from './settings';

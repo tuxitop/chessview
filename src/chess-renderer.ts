@@ -7,6 +7,7 @@ import {
   ParsedChessData,
   COPY_FEEDBACK_DURATION,
   COPY_FAILURE_DURATION,
+  MOVE_LIST_PANEL_WIDTH,
   UI_LABELS
 } from './types';
 import { generateAnalysisUrls } from './parser';
@@ -27,7 +28,9 @@ export class ChessRenderer {
   private puzzle: PuzzleController | null = null;
   private nav: NavigationController | null = null;
 
+  private menuEl: HTMLElement | null = null;
   private _keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private _menuCloseHandler: ((e: MouseEvent) => void) | null = null;
   private destroyed: boolean = false;
 
   constructor(
@@ -96,13 +99,6 @@ export class ChessRenderer {
 
     const mainContainer = this.container.createDiv({ cls: 'cv-container' });
 
-    this.renderHeader(mainContainer);
-
-    const content = mainContainer.createDiv({ cls: 'cv-content' });
-    if (this.settings.moveListPosition === 'bottom') {
-      content.addClass('cv-content-vertical');
-    }
-
     this.board = new BoardManager(
       this.container,
       this.settings,
@@ -110,62 +106,142 @@ export class ChessRenderer {
       this.isFlipped
     );
 
-    const boardSection = content.createDiv({ cls: 'cv-board-section' });
-    this.board.createBoard(boardSection);
-
     if (this.data.isPuzzle) {
-      this.puzzle = new PuzzleController(
-        this.chess,
-        this.data,
-        this.settings,
-        this.board,
-        this.startFen
-      );
-
-      this.board.initChessground(this.chess);
-
-      const movesSection = content.createDiv({ cls: 'cv-moves-section' });
-      this.puzzle.createMoveList(movesSection);
-
-      this.renderFooter(mainContainer);
-      this.puzzle.createPuzzleUI(mainContainer);
-
-      this.board.applyTheme();
-      this.board.applyPieceSet();
-
-      this.puzzle.start();
+      this.renderPuzzle(mainContainer);
     } else {
-      this.nav = new NavigationController(
-        this.chess,
-        this.data,
-        this.settings,
-        this.board,
-        this.startFen
-      );
-
-      const userMoveHandler = (orig: Key, dest: Key): void => {
-        void this.nav!.handleUserMove(orig, dest);
-      };
-      this.board.initChessground(this.chess, userMoveHandler);
-
-      this.nav.createBranchOverlay(boardSection);
-
-      if (this.settings.showMoveList && this.nav.moveCount > 0) {
-        const movesSection = content.createDiv({ cls: 'cv-moves-section' });
-        this.nav.createMoveList(movesSection);
-      }
-
-      this.renderFooter(mainContainer);
-
-      this.board.applyTheme();
-      this.board.applyPieceSet();
-
-      if (this.data.startMove > 0) {
-        this.nav.goToStartMove();
-      }
+      this.renderGame(mainContainer);
     }
 
     this.setupKeyboardShortcuts();
+  }
+
+  private renderGame(mainContainer: HTMLElement): void {
+    this.renderHeader(mainContainer);
+
+    const useRightLayout = this.shouldUseRightLayout();
+
+    const content = mainContainer.createDiv({ cls: 'cv-content' });
+    if (!useRightLayout) {
+      content.addClass('cv-content-vertical');
+    }
+
+    // Board column
+    const boardColumn = content.createDiv({ cls: 'cv-board-column' });
+    const boardSection = boardColumn.createDiv({ cls: 'cv-board-section' });
+    this.board!.createBoard(boardSection);
+
+    // Create nav controller
+    this.nav = new NavigationController(
+      this.chess,
+      this.data,
+      this.settings,
+      this.board!,
+      this.startFen
+    );
+
+    const userMoveHandler = (orig: Key, dest: Key): void => {
+      void this.nav!.handleUserMove(orig, dest);
+    };
+    this.board!.initChessground(this.chess, userMoveHandler);
+    this.nav.createBranchOverlay(boardSection);
+
+    // Move list — right of board
+    if (useRightLayout && this.settings.showMoveList && this.nav.moveCount > 0) {
+      const movesSection = content.createDiv({ cls: 'cv-moves-section' });
+      this.nav.createMoveList(movesSection);
+    }
+
+    // Footer — always full width of container
+    this.renderFooter(mainContainer);
+
+    // Move list below footer for bottom layout — inside board column
+    if (!useRightLayout && this.settings.showMoveList && this.nav.moveCount > 0) {
+      const bottomMoves = boardColumn.createDiv({ cls: 'cv-bottom-moves' });
+      this.nav.createMoveList(bottomMoves);
+    }
+
+    this.board!.applyTheme();
+    this.board!.applyPieceSet();
+
+    if (this.data.startMove > 0) {
+      this.nav.goToStartMove();
+    }
+  }
+
+  private renderPuzzle(mainContainer: HTMLElement): void {
+    this.puzzle = new PuzzleController(
+      this.chess,
+      this.data,
+      this.settings,
+      this.board!,
+      this.startFen
+    );
+
+    this.renderPuzzleHeader(mainContainer);
+
+    const useRightLayout = this.shouldUseRightLayout();
+
+    const content = mainContainer.createDiv({ cls: 'cv-content' });
+    if (!useRightLayout) {
+      content.addClass('cv-content-vertical');
+    }
+
+    const boardColumn = content.createDiv({ cls: 'cv-board-column' });
+    const boardSection = boardColumn.createDiv({ cls: 'cv-board-section' });
+    this.board!.createBoard(boardSection);
+    this.board!.initChessground(this.chess);
+
+    if (useRightLayout) {
+      const movesSection = content.createDiv({ cls: 'cv-moves-section cv-moves-section-puzzle' });
+      this.puzzle.createMoveList(movesSection);
+    }
+
+    // Footer with puzzle controls
+    this.renderPuzzleFooter(mainContainer);
+
+    // Move list below footer for bottom layout — inside board column
+    if (!useRightLayout) {
+      const bottomMoves = boardColumn.createDiv({ cls: 'cv-bottom-moves cv-bottom-moves-puzzle' });
+      this.puzzle.createMoveList(bottomMoves);
+    }
+
+    this.board!.applyTheme();
+    this.board!.applyPieceSet();
+
+    this.puzzle.start();
+  }
+
+  private shouldUseRightLayout(): boolean {
+    if (!this.settings.showMoveList) return false;
+
+    const hasMoves = this.data.isPuzzle
+      ? this.data.solutionMoves.length > 0
+      : (this.data.moves.length > 0);
+
+    if (!hasMoves) return false;
+
+    if (this.settings.moveListPosition === 'bottom') return false;
+
+    // Use board pixel width + move list width to determine if right layout fits.
+    // We can't rely on container.parentElement.clientWidth at render time
+    // because the element may not be in the DOM yet. Instead, use the
+    // Obsidian workspace leaf width via the closest .workspace-leaf-content.
+    const boardWidth = this.getBoardPixelWidth();
+    const needed = boardWidth + MOVE_LIST_PANEL_WIDTH;
+
+    const leaf = this.container.closest('.workspace-leaf-content');
+    const available = leaf ? leaf.clientWidth : document.body.clientWidth;
+
+    return available >= needed;
+  }
+  private getBoardPixelWidth(): number {
+    switch (this.settings.boardSize) {
+    case 'small': return 280;
+    case 'medium': return 360;
+    case 'large': return 480;
+    case 'auto': return Math.min(480, this.container.parentElement?.clientWidth ?? 480);
+    default: return 360;
+    }
   }
 
   private renderError(message: string): void {
@@ -180,42 +256,84 @@ export class ChessRenderer {
 
   private renderHeader(container: HTMLElement): void {
     const header = container.createDiv({ cls: 'cv-header' });
-    const headerText = header.createSpan({ cls: 'cv-header-text' });
 
-    if (this.data.isPuzzle) {
-      headerText.createSpan({ cls: 'cv-header-label', text: UI_LABELS.puzzleLabel });
+    const line1 = header.createDiv({ cls: 'cv-header-line1' });
+    const line2 = header.createDiv({ cls: 'cv-header-line2' });
 
-      const infoParts: string[] = [];
-      if (this.data.puzzleTitle) infoParts.push(this.data.puzzleTitle);
-      if (this.data.puzzleRating)
-        infoParts.push(`${UI_LABELS.ratingPrefix}${this.data.puzzleRating}`);
-      if (this.data.puzzleThemes.length > 0)
-        infoParts.push(this.data.puzzleThemes.join(', '));
+    const white = this.data.headers['White'];
+    const black = this.data.headers['Black'];
+    if (white || black) {
+      line1.createSpan({
+        cls: 'cv-header-players',
+        text: `${white || '?'} vs ${black || '?'}`
+      });
+    }
 
-      const event = this.data.headers['Event'];
-      if (event && event !== '?') infoParts.push(event);
+    const secondaryParts: string[] = [];
+    const event = this.data.headers['Event'];
+    if (event && event !== '?') secondaryParts.push(event);
 
-      headerText.appendText(
-        infoParts.length > 0 ? infoParts.join(' • ') : UI_LABELS.defaultPuzzleInfo
-      );
-    } else {
-      const parts: string[] = [];
+    const date = this.data.headers['Date'];
+    if (date && date !== '????.??.??') secondaryParts.push(date.replace(/\./g, '-'));
 
-      const white = this.data.headers['White'];
-      const black = this.data.headers['Black'];
-      if (white || black) parts.push(`${white || '?'} vs ${black || '?'}`);
+    const result = this.data.headers['Result'];
+    if (result && result !== '*') secondaryParts.push(result);
 
-      const event = this.data.headers['Event'];
-      if (event && event !== '?') parts.push(event);
+    if (secondaryParts.length > 0) {
+      line2.createSpan({
+        cls: 'cv-header-secondary',
+        text: secondaryParts.join(' • ')
+      });
+    }
 
-      const date = this.data.headers['Date'];
-      if (date && date !== '????.??.??') parts.push(date.replace(/\./g, '-'));
+    // If no players, put everything on line1
+    if (!white && !black) {
+      line1.textContent = secondaryParts.length > 0
+        ? secondaryParts.join(' • ')
+        : UI_LABELS.defaultHeader;
+      line2.remove();
+    }
 
-      const result = this.data.headers['Result'];
-      if (result && result !== '*') parts.push(result);
+    // If no secondary info, remove line2
+    if (secondaryParts.length === 0 && line2.parentElement) {
+      line2.remove();
+    }
+  }
 
-      headerText.textContent =
-        parts.length > 0 ? parts.join(' • ') : UI_LABELS.defaultHeader;
+  private renderPuzzleHeader(container: HTMLElement): void {
+    const header = container.createDiv({ cls: 'cv-header' });
+
+    const line1 = header.createDiv({ cls: 'cv-header-line1' });
+    line1.createSpan({ cls: 'cv-header-label', text: UI_LABELS.puzzleLabel });
+
+    const playerLabel = this.data.playerColor === 'white'
+      ? UI_LABELS.playerWhite
+      : UI_LABELS.playerBlack;
+
+    const statusSpan = line1.createSpan({
+      cls: 'cv-header-puzzle-status',
+      text: UI_LABELS.puzzleHeaderPlaying(playerLabel)
+    });
+
+    // Store reference for puzzle controller to update
+    this.puzzle!.setHeaderStatusEl(statusSpan);
+
+    const secondaryParts: string[] = [];
+    if (this.data.puzzleTitle) secondaryParts.push(this.data.puzzleTitle);
+    if (this.data.puzzleRating)
+      secondaryParts.push(`${UI_LABELS.ratingPrefix}${this.data.puzzleRating}`);
+    if (this.data.puzzleThemes.length > 0)
+      secondaryParts.push(this.data.puzzleThemes.join(', '));
+
+    const event = this.data.headers['Event'];
+    if (event && event !== '?') secondaryParts.push(event);
+
+    if (secondaryParts.length > 0) {
+      const line2 = header.createDiv({ cls: 'cv-header-line2' });
+      line2.createSpan({
+        cls: 'cv-header-secondary',
+        text: secondaryParts.join(' • ')
+      });
     }
   }
 
@@ -224,7 +342,7 @@ export class ChessRenderer {
 
     const leftGroup = footer.createDiv({ cls: 'cv-footer-left' });
 
-    if (!this.data.isPuzzle && this.nav && this.nav.moveCount > 0) {
+    if (this.nav && this.nav.moveCount > 0) {
       this.createControlBtn(
         leftGroup,
         UI_LABELS.firstMove,
@@ -274,29 +392,114 @@ export class ChessRenderer {
       }
     });
 
-    const copyBtn = rightGroup.createEl('button', {
-      cls: 'cv-action-btn',
-      attr: { 'aria-label': UI_LABELS.copyAriaLabel, title: UI_LABELS.copyTooltip }
+    this.createMenuButton(rightGroup);
+  }
+
+  private renderPuzzleFooter(container: HTMLElement): void {
+    const footer = container.createDiv({ cls: 'cv-footer' });
+
+    const leftGroup = footer.createDiv({ cls: 'cv-footer-left' });
+
+    // Nav buttons for puzzle — work on already played moves
+    this.createControlBtn(
+      leftGroup,
+      UI_LABELS.firstMove,
+      UI_LABELS.firstMoveTooltip,
+      () => this.puzzle!.goToStart()
+    );
+    this.createControlBtn(
+      leftGroup,
+      UI_LABELS.previousMove,
+      UI_LABELS.previousMoveTooltip,
+      () => this.puzzle!.goBack()
+    );
+    this.createControlBtn(
+      leftGroup,
+      UI_LABELS.nextMove,
+      UI_LABELS.nextMoveTooltip,
+      () => this.puzzle!.goForward()
+    );
+    this.createControlBtn(
+      leftGroup,
+      UI_LABELS.lastMove,
+      UI_LABELS.lastMoveTooltip,
+      () => this.puzzle!.goToEnd()
+    );
+
+    const rightGroup = footer.createDiv({ cls: 'cv-footer-right' });
+
+    // Puzzle action buttons — icon only with tooltips
+    this.puzzle!.createFooterButtons(rightGroup);
+
+    this.createControlBtn(rightGroup, UI_LABELS.flipBoard, UI_LABELS.flipTooltip, () => {
+      this.isFlipped = !this.isFlipped;
+      this.board?.flipBoard();
     });
-    this.createCopyIcon(copyBtn);
-    copyBtn.onclick = () => {
+
+    this.createMenuButton(rightGroup);
+  }
+
+  private createMenuButton(container: HTMLElement): void {
+    const wrapper = container.createDiv({ cls: 'cv-menu-wrapper' });
+
+    const menuBtn = this.createControlBtn(
+      wrapper,
+      '☰',
+      UI_LABELS.menuTooltip,
+      () => this.toggleMenu()
+    );
+    menuBtn.addClass('cv-menu-btn');
+
+    const dropdown = wrapper.createDiv({ cls: 'cv-menu-dropdown' });
+    this.menuEl = dropdown;
+
+    // Copy
+    const copyItem = dropdown.createDiv({ cls: 'cv-menu-item' });
+    copyItem.textContent = UI_LABELS.menuCopy;
+    copyItem.onclick = () => {
+      this.closeMenu();
       void this.copyToClipboard();
     };
 
+    // Analysis links
     if (this.settings.showAnalysisLinks) {
       const urls = generateAnalysisUrls(this.data);
-      rightGroup.createEl('a', {
-        cls: 'cv-action-link',
-        text: UI_LABELS.lichessLabel,
+
+      const lichessItem = dropdown.createEl('a', {
+        cls: 'cv-menu-item',
+        text: UI_LABELS.menuLichess,
         href: urls.lichess,
         attr: { target: '_blank', rel: 'noopener' }
       });
-      rightGroup.createEl('a', {
-        cls: 'cv-action-link',
-        text: UI_LABELS.chessComLabel,
+      lichessItem.onclick = () => this.closeMenu();
+
+      const chessComItem = dropdown.createEl('a', {
+        cls: 'cv-menu-item',
+        text: UI_LABELS.menuChessCom,
         href: urls.chessCom,
         attr: { target: '_blank', rel: 'noopener' }
       });
+      chessComItem.onclick = () => this.closeMenu();
+    }
+
+    // Close menu when clicking outside
+    this._menuCloseHandler = (e: MouseEvent) => {
+      if (!wrapper.contains(e.target as Node)) {
+        this.closeMenu();
+      }
+    };
+    document.addEventListener('click', this._menuCloseHandler);
+  }
+
+  private toggleMenu(): void {
+    if (this.menuEl) {
+      this.menuEl.toggleClass('visible', !this.menuEl.hasClass('visible'));
+    }
+  }
+
+  private closeMenu(): void {
+    if (this.menuEl) {
+      this.menuEl.removeClass('visible');
     }
   }
 
@@ -365,7 +568,7 @@ export class ChessRenderer {
       text = this.chess.fen();
     }
 
-    const btn = this.container.querySelector('.cv-action-btn');
+    const btn = this.container.querySelector('.cv-menu-btn');
 
     try {
       await navigator.clipboard.writeText(text);
@@ -388,10 +591,29 @@ export class ChessRenderer {
       if (this.destroyed) return;
 
       if (this.data.isPuzzle) {
-        if (e.key === 'f' || e.key === 'F') {
+        switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          this.puzzle?.goBack();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          this.puzzle?.goForward();
+          break;
+        case 'Home':
+          e.preventDefault();
+          this.puzzle?.goToStart();
+          break;
+        case 'End':
+          e.preventDefault();
+          this.puzzle?.goToEnd();
+          break;
+        case 'f':
+        case 'F':
           e.preventDefault();
           this.isFlipped = !this.isFlipped;
           this.board?.flipBoard();
+          break;
         }
         return;
       }
@@ -425,6 +647,9 @@ export class ChessRenderer {
         this.isFlipped = !this.isFlipped;
         this.board?.flipBoard();
         break;
+      case 'Escape':
+        this.closeMenu();
+        break;
       }
     };
 
@@ -440,6 +665,11 @@ export class ChessRenderer {
       this._keyHandler = null;
     }
 
+    if (this._menuCloseHandler) {
+      document.removeEventListener('click', this._menuCloseHandler);
+      this._menuCloseHandler = null;
+    }
+
     this.nav?.destroy();
     this.puzzle?.destroy();
     this.board?.destroy();
@@ -447,5 +677,6 @@ export class ChessRenderer {
     this.nav = null;
     this.puzzle = null;
     this.board = null;
+    this.menuEl = null;
   }
 }

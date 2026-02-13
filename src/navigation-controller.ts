@@ -67,7 +67,8 @@ export class NavigationController {
   createMoveList(movesSection: HTMLElement): void {
     this.moveListEl = movesSection.createDiv({ cls: 'cv-moves' });
     this.renderMoveList();
-    this.commentEl = movesSection.createDiv({ cls: 'cv-comment hidden' });
+    // Comment area inside the moves section — always present
+    this.commentEl = movesSection.createDiv({ cls: 'cv-comment' });
   }
 
   createBranchOverlay(boardSection: HTMLElement): void {
@@ -288,19 +289,20 @@ export class NavigationController {
     if (!this.moveListEl) return;
     this.moveListEl.empty();
 
-    const list = this.moveListEl.createDiv({ cls: 'cv-moves-list' });
+    const list = this.moveListEl.createDiv({ cls: 'cv-moves-grid' });
 
     for (let i = 0; i < this.moves.length; i += 2) {
-      const row = list.createDiv({ cls: 'cv-move-row' });
-      row.createSpan({
+      list.createSpan({
         cls: 'cv-move-num',
         text: `${Math.floor(i / 2) + 1}.`
       });
 
-      this.createMoveSpan(row, this.moves[i], i);
+      this.createMoveSpan(list, this.moves[i], i);
 
       if (i + 1 < this.moves.length) {
-        this.createMoveSpan(row, this.moves[i + 1], i + 1);
+        this.createMoveSpan(list, this.moves[i + 1], i + 1);
+      } else {
+        list.createSpan({ cls: 'cv-move-empty' });
       }
     }
   }
@@ -362,26 +364,15 @@ export class NavigationController {
     if (!this.commentEl) return;
     this.commentEl.empty();
 
-    if (this.currentMoveIndex <= 0) {
-      this.commentEl.addClass('hidden');
-      return;
-    }
+    if (this.currentMoveIndex <= 0) return;
 
     const move = this.moves[this.currentMoveIndex - 1];
-    if (!move) {
-      this.commentEl.addClass('hidden');
-      return;
-    }
+    if (!move) return;
 
     const hasNag = !!move.nag;
     const hasComment = !!move.comment;
 
-    if (!hasNag && !hasComment) {
-      this.commentEl.addClass('hidden');
-      return;
-    }
-
-    this.commentEl.removeClass('hidden');
+    if (!hasNag && !hasComment) return;
 
     if (hasNag && move.nag) {
       const nagClass = NAG_CLASSES[move.nag] ?? '';

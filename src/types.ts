@@ -258,12 +258,15 @@ export const UI_LABELS = {
   playTooltip: 'Play (space)',
   pauseTooltip: 'Pause (space)',
   flipTooltip: 'Flip board',
-  copyTooltip: 'Copy to clipboard',
-  copyAriaLabel: 'Copy',
+
+  // Menu
+  menuTooltip: 'More actions',
+  menuCopy: '📋 Copy PGN/FEN',
+  menuLichess: '♞ Analyze on Lichess',
+  menuChessCom: '♟ Analyze on Chess.com',
 
   // Header
   puzzleLabel: 'Puzzle',
-  defaultPuzzleInfo: 'Solve the puzzle',
   ratingPrefix: 'Rating: ',
   defaultHeader: 'Chess position',
 
@@ -272,19 +275,23 @@ export const UI_LABELS = {
   errorDetails: 'Details',
   errorNoInput: 'No input',
 
-  // Analysis links
-  lichessLabel: 'Lichess',
-  chessComLabel: 'Chess.com',
+  // Puzzle header status
+  puzzleHeaderPlaying: (color: string) => `${color} to move`,
+  puzzleHeaderSolved: '✓ Solved!',
+  puzzleHeaderFailed: '✗ Incorrect',
+  puzzleHeaderWaiting: 'Watch...',
 
-  // Puzzle
-  puzzleWaiting: 'Watch...',
-  puzzlePlaying: (color: string) => `${color} to move — your turn`,
-  puzzleSolved: '✓ Puzzle solved!',
-  puzzleFailed: '✗ Incorrect',
-  retry: '↺ Retry',
-  hint: '💡 Hint',
-  showSolution: '👁 Show solution',
-  hideSolution: '🙈 Hide solution',
+  // Puzzle footer buttons (icon-only with tooltips)
+  hintIcon: '💡',
+  hintTooltip: 'Hint',
+  showSolutionIcon: '👁',
+  showSolutionTooltip: 'Show solution',
+  hideSolutionIcon: '🙈',
+  hideSolutionTooltip: 'Hide solution',
+  retryIcon: '↺',
+  retryTooltip: 'Retry',
+
+  // Puzzle move list
   solvePuzzle: 'Solve the puzzle...',
   movePlaceholder: '...',
   playerWhite: 'White',
@@ -312,3 +319,6 @@ export const COPY_FAILURE_DURATION = 2000;
 
 /** Percentage width of one square on the board */
 export const SQUARE_SIZE_PERCENT = 12.5;
+
+/** Minimum width needed for move list panel beside board (px) */
+export const MOVE_LIST_PANEL_WIDTH = 200;

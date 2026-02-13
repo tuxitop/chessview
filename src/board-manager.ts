@@ -372,6 +372,7 @@ export class BoardManager {
           this.boardEl.style.height = `${width}px`;
           this.ground?.redrawAll();
           this.container.style.setProperty('--cv-board-height', `${width}px`);
+          this.container.style.setProperty('--cv-board-width', `${width}px`);
         }
       }
     });
@@ -380,7 +381,6 @@ export class BoardManager {
       this.resizeObserver.observe(this.boardEl);
     }
   }
-
   applyTheme(): void {
     const theme = this.settings.boardTheme;
     const colors =
@@ -497,6 +497,8 @@ export class BoardManager {
       this.container.style.removeProperty(prop);
     }
     this._appliedStyleProps = [];
+    this.container.style.removeProperty('--cv-board-height');
+    this.container.style.removeProperty('--cv-board-width');
 
     const pieceStyle = this.container.querySelector('.cv-piece-style');
     if (pieceStyle) pieceStyle.remove();
