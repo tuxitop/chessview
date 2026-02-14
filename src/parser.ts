@@ -11,6 +11,10 @@ import {
 
 const SEPARATOR = '---';
 
+// =========================================================================
+// ENTRY POINT
+// =========================================================================
+
 export function parseChessInput(source: string): ParsedChessData {
   const result: ParsedChessData = {
     type: 'game',
@@ -37,13 +41,27 @@ export function parseChessInput(source: string): ParsedChessData {
 
   try {
     const cleaned = source.trim();
-    result.isPuzzle = /^\[puzzle\]/im.test(cleaned);
+    const { markers, chessData } = splitSections(cleaned);
 
-    if (result.isPuzzle) {
-      return parsePuzzle(cleaned, result);
-    } else {
-      return parseGame(cleaned, result);
+    for (const line of markers) {
+      parseMarkerLine(line, result);
     }
+
+    if (!chessData) {
+      result.error = 'No FEN or PGN data provided';
+      return result;
+    }
+
+    parseChessData(chessData, result);
+
+    if (result.isPuzzle && !result.error) {
+      const hasOrientationMarker = markers.some(
+        (l) => /^\[(white|black|flip)\]$/i.test(l)
+      );
+      finalizePuzzle(result, hasOrientationMarker);
+    }
+
+    return result;
   } catch (e) {
     result.error = e instanceof Error ? e.message : 'Unknown parsing error';
     return result;
@@ -51,101 +69,31 @@ export function parseChessInput(source: string): ParsedChessData {
 }
 
 // =========================================================================
-// PUZZLE PARSING
+// SECTION SPLITTING
 // =========================================================================
 
-function parsePuzzle(source: string, result: ParsedChessData): ParsedChessData {
-  result.type = 'puzzle';
-  result.isEditable = false;
-
-  const sepIndex = source.indexOf(SEPARATOR);
-  let markerSection: string;
-  let pgnSection: string;
-
-  if (sepIndex !== -1) {
-    markerSection = source.substring(0, sepIndex).trim();
-    pgnSection = source.substring(sepIndex + SEPARATOR.length).trim();
-  } else {
-    // No separator — treat everything as markers, no PGN
-    markerSection = source;
-    pgnSection = '';
-  }
-
-  // Parse markers (before ---)
-  const markerLines = markerSection
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l);
-
-  for (const line of markerLines) {
-    parseMarkerLine(line, result);
-  }
-
-  if (!pgnSection) {
-    result.error = 'Puzzle has no PGN data after ---';
-    return result;
-  }
-
-  // Parse PGN section (after ---) — standard PGN
-  const fenHeader = pgnSection.match(/\[FEN\s+"([^"]+)"\]/i);
-  if (fenHeader) {
-    result.fen = normalizeFen(fenHeader[1]);
-    const validation = validateFen(result.fen);
-    if (!validation.valid) {
-      result.error = 'Invalid FEN: ' + validation.error;
-      return result;
-    }
-  }
-
-  // Extract all PGN headers
-  const headerMatches = pgnSection.matchAll(/\[(\w+)\s+"([^"]+)"\]/g);
-  for (const match of headerMatches) {
-    result.headers[match[1]] = match[2];
-  }
-
-  // Store raw PGN
-  result.pgn = pgnSection;
-
-  // Parse moves
-  result.solutionMoves = parseMovesFromPgn(pgnSection, result.fen, result.warnings);
-
-  if (result.solutionMoves.length === 0) {
-    result.error = 'Puzzle has no valid moves';
-    return result;
-  }
-
-  // Determine player color: the side that makes the LAST move
-  const fenTurn = result.fen
-    ? result.fen.split(/\s+/)[1] === 'b'
-      ? 'black'
-      : 'white'
-    : 'white';
-
-  if (result.solutionMoves.length % 2 === 0) {
-    // Even number of moves: first move is opponent, last is player
-    // Player is opposite of FEN turn
-    result.playerColor = fenTurn === 'white' ? 'black' : 'white';
-  } else {
-    // Odd number of moves: first move is player, last is player
-    // Player is same as FEN turn
-    result.playerColor = fenTurn;
-  }
-
-  // Default orientation to player's side unless explicitly set
-  if (!markerSection.match(/\[(white|black|flip)\]/i)) {
-    result.orientation = result.playerColor;
-  }
-
-  return result;
-}
-
-// =========================================================================
-// GAME PARSING
-// =========================================================================
-
-function parseGame(source: string, result: ParsedChessData): ParsedChessData {
+function splitSections(source: string): {
+  markers: string[];
+  chessData: string;
+} {
   const lines = source.split(/\r?\n/);
-  const markerLines: string[] = [];
+  const sepLineIndex = lines.findIndex((l) => l.trim() === SEPARATOR);
+
+  if (sepLineIndex !== -1) {
+    const markerLines = lines
+      .slice(0, sepLineIndex)
+      .map((l) => l.trim())
+      .filter((l) => l);
+    const chessData = lines
+      .slice(sepLineIndex + 1)
+      .join('\n')
+      .trim();
+
+    return { markers: markerLines, chessData };
+  }
+
+  // No separator — detect markers line by line
+  const markers: string[] = [];
   const chessLines: string[] = [];
   let inChessData = false;
 
@@ -153,27 +101,34 @@ function parseGame(source: string, result: ParsedChessData): ParsedChessData {
     const trimmed = line.trim();
     if (!inChessData && !trimmed) continue;
 
-    const isMarker =
-      /^\[(white|black|flip|static|noeditable|debug)\]$/i.test(trimmed) ||
-      /^\[move\s*:\s*\d+\]$/i.test(trimmed) ||
-      /^\[arrow\s*:\s*[^\]]+\]$/i.test(trimmed) ||
-      /^\[highlight\s*:\s*[^\]]+\]$/i.test(trimmed) ||
-      /^\[circle\s*:\s*[^\]]+\]$/i.test(trimmed);
-
-    if (!inChessData && isMarker) {
-      markerLines.push(trimmed);
+    if (!inChessData && isMarkerLine(trimmed)) {
+      markers.push(trimmed);
     } else {
       inChessData = true;
       chessLines.push(line);
     }
   }
 
-  for (const marker of markerLines) {
-    parseMarkerLine(marker, result);
-  }
+  return { markers, chessData: chessLines.join('\n').trim() };
+}
 
-  const chessData = chessLines.join('\n').trim();
+function isMarkerLine(line: string): boolean {
+  return (
+    /^\[(white|black|flip|static|noeditable|puzzle)\]$/i.test(line) ||
+    /^\[(move|rating|themes|title|arrow|circle|highlight)\s*:\s*[^\]]+\]$/i.test(
+      line
+    )
+  );
+}
 
+// =========================================================================
+// CHESS DATA PARSING
+// =========================================================================
+
+function parseChessData(
+  chessData: string,
+  result: ParsedChessData
+): void {
   const hasPgnHeaders = /\[\w+\s+"[^"]*"\]/.test(chessData);
   const cleanedForDetection = chessData
     .replace(/\[[^\]]*"[^\]]*\]/g, '')
@@ -192,7 +147,7 @@ function parseGame(source: string, result: ParsedChessData): ParsedChessData {
       result.error = 'Invalid FEN: ' + validation.error;
     }
   } else {
-    result.type = 'game';
+    result.type = result.isPuzzle ? 'puzzle' : 'game';
     result.pgn = chessData;
 
     const fenHeader = chessData.match(/\[FEN\s+"([^"]+)"\]/i);
@@ -209,14 +164,59 @@ function parseGame(source: string, result: ParsedChessData): ParsedChessData {
       result.headers[match[1]] = match[2];
     }
 
-    result.moves = parseMovesFromPgn(chessData, result.fen, result.warnings);
-  }
+    const moves = parseMovesFromPgn(
+      chessData,
+      result.fen,
+      result.warnings
+    );
 
-  return result;
+    if (result.isPuzzle) {
+      result.solutionMoves = moves;
+    } else {
+      result.moves = moves;
+    }
+  }
 }
 
 // =========================================================================
-// SHARED UTILITIES
+// PUZZLE FINALIZATION
+// =========================================================================
+
+function finalizePuzzle(
+  result: ParsedChessData,
+  hasOrientationMarker: boolean
+): void {
+  if (result.type === 'fen') {
+    result.error = 'Puzzle requires PGN with moves, not just a FEN position';
+    return;
+  }
+
+  if (result.solutionMoves.length === 0) {
+    result.error = 'Puzzle has no valid moves';
+    return;
+  }
+
+  result.isEditable = false;
+
+  const fenTurn = result.fen
+    ? result.fen.split(/\s+/)[1] === 'b'
+      ? 'black'
+      : 'white'
+    : 'white';
+
+  if (result.solutionMoves.length % 2 === 0) {
+    result.playerColor = fenTurn === 'white' ? 'black' : 'white';
+  } else {
+    result.playerColor = fenTurn;
+  }
+
+  if (!hasOrientationMarker) {
+    result.orientation = result.playerColor;
+  }
+}
+
+// =========================================================================
+// MARKER PARSING
 // =========================================================================
 
 function parseMarkerLine(line: string, result: ParsedChessData): void {
@@ -241,7 +241,9 @@ function parseMarkerLine(line: string, result: ParsedChessData): void {
     }
   }
 
-  if (/^\[(?:black|flip)\]$/i.test(line)) {
+  if (/^\[puzzle\]$/i.test(line)) {
+    result.isPuzzle = true;
+  } else if (/^\[(?:black|flip)\]$/i.test(line)) {
     result.orientation = 'black';
   } else if (/^\[white\]$/i.test(line)) {
     result.orientation = 'white';
@@ -255,7 +257,10 @@ function parseMarkerLine(line: string, result: ParsedChessData): void {
   parseAnnotationMarker(line, result);
 }
 
-function parseAnnotationMarker(marker: string, result: ParsedChessData): void {
+function parseAnnotationMarker(
+  marker: string,
+  result: ParsedChessData
+): void {
   const arrowMatch = marker.match(
     /^\[arrow\s*:\s*([a-h][1-8])[-]?([a-h][1-8])(?:\s+(\w+))?\]$/i
   );
@@ -293,6 +298,10 @@ function parseAnnotationMarker(marker: string, result: ParsedChessData): void {
     });
   }
 }
+
+// =========================================================================
+// MOVE PARSING
+// =========================================================================
 
 export function parseMovesFromPgn(
   pgn: string,
@@ -460,6 +469,10 @@ function mergeAnnotations(
   };
 }
 
+// =========================================================================
+// FEN UTILITIES
+// =========================================================================
+
 export function normalizeFen(fen: string): string {
   const parts = fen.trim().split(/\s+/);
   if (parts.length === 0 || parts[0].split('/').length !== 8) return fen;
@@ -498,6 +511,10 @@ export function validateFen(fen: string): { valid: boolean; error?: string } {
     };
   }
 }
+
+// =========================================================================
+// ANALYSIS URLS
+// =========================================================================
 
 export function generateAnalysisUrls(data: ParsedChessData): {
   lichess: string;
