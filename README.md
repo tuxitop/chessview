@@ -4,8 +4,6 @@ An interactive chess board plugin for [Obsidian](https://obsidian.md). Render ga
 
 ![ChessView Banner](screenshots/banner.png)
 
-<!-- TODO: Add a banner screenshot showing a game with move list, arrows, and annotations -->
-
 ## Features
 
 - **PGN Games** — Paste any PGN and get a fully navigable game viewer
@@ -14,7 +12,6 @@ An interactive chess board plugin for [Obsidian](https://obsidian.md). Render ga
 - **Move Annotations** — NAG symbols (!, ?, !!, ??, !?, ?!) with colored overlays like Chess.com/Lichess
 - **Arrows & Circles** — Draw annotations on the board using markers or PGN comments
 - **Comments** — Display inline PGN comments with move highlighting
-- **Branching** — Explore alternative lines in editable mode
 - **Themes** — 7 built-in board themes + custom colors
 - **Piece Sets** — 20 piece set options
 - **Keyboard Navigation** — Arrow keys, Home/End, Space for autoplay
@@ -39,123 +36,145 @@ An interactive chess board plugin for [Obsidian](https://obsidian.md). Render ga
 
 ## Usage
 
-Create a fenced code block with the language `chessview`:
+Create a fenced code block with the language `chessview`. Place optional ChessView markers at the top, then your FEN or PGN below. You can optionally separate markers from chess data with a `---` line.
 
-### Display a PGN Game
+### Display a PGN game
 
-````
+~~~
 ```chessview
-[Event "World Championship"]
+[Event "It (cat.17)"]
 [White "Kasparov, Garry"]
 [Black "Topalov, Veselin"]
+[WhiteElo "2851"]
+[BlackElo "2690"]
+[Date "1999.??.??"]
 [Result "1-0"]
 
-1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Be3 Bg7 5. Qd2 c6 6. f3 b5
-2. Nge2 Nbd7 8. Bh6 Bxh6 9. Qxh6 Bb7 10. a3 e5 11. O-O-O Qe7
-3. Kb1 a6 13. Nc1 O-O-O 14. Nb3 exd4 15. Rxd4 c5 16. Rd1 Nb6
-4. g3 Kb8 18. Na5 Ba8 19. Bh3 d5 20. Qf4+ Ka7 21. Rhe1 d4
-5. Nd5 Nbxd5 23. exd5 Qd6 24. Rxd4 cxd4 25. Re7+ Kb6
-6. Qxd4+ Kxa5 27. b4+ Ka4 28. Qc3 Qxd5 29. Ra7 Bb7
-7. Rxb7 Qc4 31. Qxf6 Kxa3 32. Qxa6+ Kxb4 33. c3+ Kxc3
-8. Qa1+ Kd2 35. Qb2+ Kd1 36. Bf1 Rd2 37. Rd7 Rxd7
-9. Bxc4 bxc4 39. Qxh8 Rd3 40. Qa8 c3 41. Qa4+ Ke1
-10. f4 f5 43. Kc1 Rd2 44. Qa7 1-0
+1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Be3 Bg7 5. Qd2 c6 6. f3 b5 7. Nge2 Nbd7 8. Bh6
+Bxh6 9. Qxh6 Bb7 10. a3 e5 11. O-O-O Qe7 12. Kb1 a6 13. Nc1 $6 O-O-O $2 14. Nb3 $6
+exd4 15. Rxd4 c5 16. Rd1 Nb6 17. g3 $6 Kb8 $6 18. Na5 $6 Ba8 19. Bh3 d5 20. Qf4+
+Ka7 21. Rhe1 d4 $1 22. Nd5 Nbxd5 23. exd5 Qd6 24. Rxd4 $1 cxd4 $2 25. Re7+ $3 Kb6 26.
+Qxd4+ Kxa5 27. b4+ $1 Ka4 28. Qc3 $3 Qxd5 29. Ra7 $1 Bb7 30. Rxb7 $3 Qc4 31. Qxf6
+Kxa3 $2 32. Qxa6+ $1 Kxb4 33. c3+ $1 Kxc3 34. Qa1+ $1 Kd2 35. Qb2+ $1 Kd1 36. Bf1 $3 Rd2
+2. Rd7 $3 Rxd7 38. Bxc4 bxc4 39. Qxh8 Rd3 40. Qa8 c3 41. Qa4+ Ke1 42. f4 f5 43.
+Kc1 Rd2 44. Qa7 1-0
 ```
-````
+~~~
 
-### Display a FEN Position
+### Display a FEN position
 
-````
+~~~
 ```chessview
 rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
 ```
-````
+~~~
 
-### Create a Puzzle
+### Using the separator
 
-````
-```chessview
-[puzzle]
-[rating: 1500]
-[title: Scholar's Mate]
----
+The `---` separator is optional. It lets you clearly separate markers from chess data. These two blocks are equivalent:
 
-[FEN "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4"]
+Without separator:
 
-1. Qxf7#
-```
-````
-
-### Board Orientation
-
-````
+~~~
 ```chessview
 [black]
 [Event "My Game"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5
 ```
-````
+~~~
 
-Available markers:
+With separator:
 
-- `[white]` — White at bottom (default)
-- `[black]` or `[flip]` — Black at bottom
+~~~
+```chessview
+[black]
+---
+[Event "My Game"]
 
-### Static Board (No Interaction)
+1. e4 e5 2. Nf3 Nc6 3. Bb5
+```
+~~~
 
-````
+### Board orientation
+
+~~~
+```chessview
+[black]
+[Event "Sicilian Defense"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6
+```
+~~~
+
+- `[white]` — white at bottom (default)
+- `[black]` or `[flip]` — black at bottom
+
+### Static board (no interaction)
+
+~~~
 ```chessview
 [static]
+---
 rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
 ```
-````
+~~~
 
-### Arrows and Circles
+### Non-editable board
 
-Using markers before the PGN/FEN:
+Navigate moves but cannot make your own:
 
-````
+~~~
+```chessview
+[noeditable]
+---
+[Event "Italian Game"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5
+```
+~~~
+
+### Arrows and circles
+
+Using ChessView markers:
+
+~~~
 ```chessview
 [arrow: e2e4 green]
 [arrow: d2d4 blue]
 [circle: f3 red]
-
+---
 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 ```
-````
+~~~
 
 Using standard PGN comment annotations:
 
-````
+~~~
 ```chessview
-[Event "Arrow Demo"]
-
 1. e4 {[%cal Ge2e4,Rd7d5] [%csl Gd4,Re5]} e5 2. Nf3
 ```
-````
+~~~
 
-Arrow/circle color codes: `G` = green, `R` = red, `B` = blue, `Y` = yellow, `O` = orange, `P` = purple
+Color codes: `G` = green, `R` = red, `B` = blue, `Y` = yellow, `O` = orange, `P` = purple
 
-### Move Annotations (NAGs)
+### Move annotations (NAGs)
 
 Inline annotations:
 
-````
+~~~
 ```chessview
-
 1. e4! e5 2. Nf3!! Nc6? 3. Bb5?! a6!? 4. Ba4 Nf6??
 ```
-````
+~~~
 
 PGN standard NAGs:
 
-````
+~~~
 ```chessview
-
 1. e4 $1 e5 $2 2. Nf3 $3 Nc6 $4 3. Bb5 $5 a6 $6
 ```
-````
+~~~
 
 | Symbol | NAG  | Meaning          |
 | ------ | ---- | ---------------- |
@@ -165,60 +184,105 @@ PGN standard NAGs:
 | `??`   | `$4` | Blunder          |
 | `!?`   | `$5` | Interesting move |
 | `?!`   | `$6` | Dubious move     |
+| `X`    | `$9` | Miss             |
 
 ### Comments
 
-````
+~~~
 ```chessview
 1. e4 {The King's Pawn opening} e5 {A solid response}
 2. Nf3 {Developing the knight toward the center} Nc6
 ```
-````
+~~~
 
-### Start at a Specific Move
+### Start at a specific position
 
-````
+Use `[ply: N]` to skip ahead N half-moves. In chess, a ply is one
+player's move — so 1.e4 is ply 1, 1…e5 is ply 2, 2.Nf3 is ply 3,
+and so on.
+
+~~~
 ```chessview
-[move: 15]
-[Event "My Game"]
+[ply: 6]
+---
+[Event "Italian Game"]
 
-1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ...
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4
+6. cxd4 Bb4+ 7. Nc3 Nxe4 8. O-O Bxc3 9. bxc3 d5
 ```
-````
+~~~
 
-### Puzzle with Hints and Themes
+### Puzzles
 
-````
+Add `[puzzle]` to enable puzzle mode. The position must include moves to solve:
+
+~~~
+```chessview
+[puzzle]
+[title: Scholar's Mate]
+[rating: 1500]
+---
+[FEN "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4"]
+
+1. Qxf7#
+```
+~~~
+
+Puzzle with themes:
+
+~~~
 ```chessview
 [puzzle]
 [rating: 2100]
 [title: Find the winning combination]
 [themes: sacrifice, fork]
-
 ---
-
 [FEN "r2qr1k1/ppp2ppp/2np1n2/2b1p1B1/2B1P1b1/2NP1N2/PPP2PPP/R2QR1K1 w - - 0 1"]
 
 1. Bxf7+ Kh8 2. Ng5
 ```
-````
+~~~
 
-## Marker Reference
+Puzzle without separator (also valid):
 
-| Marker                  | Description                       |
-| ----------------------- | --------------------------------- |
-| `[white]`               | White at bottom                   |
-| `[black]` or `[flip]`   | Black at bottom                   |
-| `[static]`              | No interaction, view only         |
-| `[noeditable]`          | Can navigate but not make moves   |
-| `[move: N]`             | Start at move N                   |
-| `[arrow: e2e4 color]`   | Draw arrow (color optional)       |
-| `[circle: e4 color]`    | Draw circle (color optional)      |
-| `[highlight: e4 color]` | Highlight square (color optional) |
-| `[puzzle]`              | Enable puzzle mode                |
-| `[rating: N]`           | Puzzle rating                     |
-| `[title: text]`         | Puzzle title                      |
-| `[themes: a, b, c]`     | Puzzle themes                     |
+~~~
+```chessview
+[puzzle]
+[title: Back rank mate]
+[FEN "6k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1"]
+
+1. Rc8#
+```
+~~~
+
+The board automatically orients to the solving side. Override with `[white]` or `[black]`.
+
+## Marker reference
+
+### Display markers
+
+These markers control how the board looks and behaves. They work in both game and puzzle mode.
+
+| Marker                | Description                       |
+| --------------------- | --------------------------------- |
+| `[white]`             | White at bottom (default)         |
+| `[black]` or `[flip]` | Black at bottom                   |
+| `[static]`            | No interaction, view only         |
+| `[noeditable]`        | Can navigate but cannot add moves |
+| `[ply: N]`            | Start display at half-move N      |
+| `[arrow: e2e4 color]` | Draw arrow (color optional)       |
+| `[circle: e4 color]`  | Draw circle (color optional)      |
+
+### Puzzle markers
+
+These markers are only meaningful in puzzle mode.
+
+| Marker              | Description                  |
+| ------------------- | ---------------------------- |
+| `[puzzle]`          | Enable puzzle mode (required) |
+| `[rating: N]`       | Puzzle difficulty rating     |
+| `[title: text]`     | Puzzle title                 |
+| `[themes: a, b, c]` | Puzzle themes (comma-separated) |
 
 ## Keyboard Shortcuts
 
