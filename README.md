@@ -2,8 +2,6 @@
 
 An interactive chess board plugin for [Obsidian](https://obsidian.md). Render games from PGN, display positions from FEN, solve puzzles, draw arrows and circles, navigate moves with keyboard shortcuts, and analyze on Lichess or Chess.com — all inside your notes.
 
-![ChessView Banner](screenshots/banner.png)
-
 ## Features
 
 - **PGN Games** — Paste any PGN and get a fully navigable game viewer
@@ -18,6 +16,25 @@ An interactive chess board plugin for [Obsidian](https://obsidian.md). Render ga
 - **Analysis Links** — One-click export to Lichess and Chess.com
 - **Mobile Friendly** — Responsive layout that adapts to any screen size
 - **Dark Mode** — Full support for Obsidian's dark theme
+
+## Screenshots
+
+### Game viewer
+![Game viewer](screenshots/game-viewer.png)
+*PGN game with move list, annotations, and navigation controls*
+
+### Puzzle mode
+![Puzzle mode](screenshots/puzzle-mode.png)
+*Interactive puzzle with hint and solution buttons*
+
+### Arrows and circles
+![Annotations](screenshots/annotations.png)
+*Board annotations using arrows and circle markers*
+
+### Mobile view
+![Mobile](screenshots/mobile-view.png)
+
+*Responsive layout with move list below the board*
 
 ## Installation
 
