@@ -407,8 +407,7 @@ export class PuzzleController {
     if (this.solutionRevealed) {
       this.renderMoveRows(list, this.data.solutionMoves, true);
     } else if (this.playedMoves.length === 0) {
-      const empty = list.createDiv({ cls: 'cv-moves-empty', text: UI_LABELS.solvePuzzle });
-      empty.style.gridColumn = '1 / -1';
+      list.createDiv({ cls: 'cv-moves-empty', text: UI_LABELS.solvePuzzle });
     } else {
       this.renderMoveRows(list, this.playedMoves, false);
     }
