@@ -115,7 +115,7 @@ function splitSections(source: string): {
 function isMarkerLine(line: string): boolean {
   return (
     /^\[(white|black|flip|static|noeditable|puzzle)\]$/i.test(line) ||
-    /^\[(move|rating|themes|title|arrow|circle|highlight)\s*:\s*[^\]]+\]$/i.test(
+    /^\[(ply|rating|themes|title|arrow|circle|highlight)\s*:\s*[^\]]+\]$/i.test(
       line
     )
   );
@@ -235,7 +235,7 @@ function parseMarkerLine(line: string, result: ParsedChessData): void {
     case 'title':
       result.puzzleTitle = value;
       break;
-    case 'move':
+    case 'ply':
       result.startMove = parseInt(value) || 0;
       break;
     }
