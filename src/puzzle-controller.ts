@@ -394,7 +394,16 @@ export class PuzzleController {
     btn.setAttribute('aria-label', tooltip);
     btn.setAttribute('title', tooltip);
     btn.textContent = icon;
-    btn.onclick = onClick;
+    btn.onclick = (e: MouseEvent) => {
+      e.stopPropagation();
+      onClick();
+    };
+    btn.addEventListener('touchstart', (e: TouchEvent) => {
+      e.stopPropagation();
+    });
+    btn.addEventListener('touchend', (e: TouchEvent) => {
+      e.stopPropagation();
+    });
     return btn;
   }
 

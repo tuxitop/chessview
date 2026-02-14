@@ -556,7 +556,16 @@ export class ChessRenderer {
       attr: { 'aria-label': label, title: label }
     });
     btn.textContent = icon;
-    btn.onclick = onClick;
+    btn.onclick = (e: MouseEvent) => {
+      e.stopPropagation();
+      onClick();
+    };
+    btn.addEventListener('touchstart', (e: TouchEvent) => {
+      e.stopPropagation();
+    });
+    btn.addEventListener('touchend', (e: TouchEvent) => {
+      e.stopPropagation();
+    });
     return btn;
   }
 

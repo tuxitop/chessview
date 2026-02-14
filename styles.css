@@ -982,6 +982,7 @@ cg-board piece.fading {
 }
 
 .cv-btn {
+  touch-action: manipulation;
   width: 30px;
   height: 30px;
   display: flex;
