@@ -263,10 +263,18 @@ export class ChessRenderer {
 
     const white = this.data.headers['White'];
     const black = this.data.headers['Black'];
+    const whiteElo = this.data.headers['WhiteElo'];
+    const blackElo = this.data.headers['BlackElo'];
+
     if (white || black) {
+      const whiteName = white || '?';
+      const blackName = black || '?';
+      const whiteDisplay = whiteElo && whiteElo !== '?' ? `${whiteName} (${whiteElo})` : whiteName;
+      const blackDisplay = blackElo && blackElo !== '?' ? `${blackName} (${blackElo})` : blackName;
+
       line1.createSpan({
         cls: 'cv-header-players',
-        text: `${white || '?'} vs ${black || '?'}`
+        text: `${whiteDisplay} vs ${blackDisplay}`
       });
     }
 
@@ -275,7 +283,13 @@ export class ChessRenderer {
     if (event && event !== '?') secondaryParts.push(event);
 
     const date = this.data.headers['Date'];
-    if (date && date !== '????.??.??') secondaryParts.push(date.replace(/\./g, '-'));
+    if (date && date !== '????.??.??') {
+      const formatted = date
+        .split('.')
+        .filter((p) => p !== '??')
+        .join('-');
+      if (formatted) secondaryParts.push(formatted);
+    }
 
     const result = this.data.headers['Result'];
     if (result && result !== '*') secondaryParts.push(result);
