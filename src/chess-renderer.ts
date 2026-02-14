@@ -151,13 +151,17 @@ export class ChessRenderer {
       this.nav.createMoveList(movesSection);
     }
 
-    // Footer — always full width of container
-    this.renderFooter(mainContainer);
+    if (useRightLayout) {
+      // Footer spans full width below board + moves panel
+      this.renderFooter(mainContainer);
+    } else {
+      // Footer inside board column, between board and move list
+      this.renderFooter(boardColumn);
 
-    // Move list below footer for bottom layout — inside board column
-    if (!useRightLayout && this.settings.showMoveList && this.nav.moveCount > 0) {
-      const bottomMoves = boardColumn.createDiv({ cls: 'cv-bottom-moves' });
-      this.nav.createMoveList(bottomMoves);
+      if (this.settings.showMoveList && this.nav.moveCount > 0) {
+        const bottomMoves = boardColumn.createDiv({ cls: 'cv-bottom-moves' });
+        this.nav.createMoveList(bottomMoves);
+      }
     }
 
     this.board!.applyTheme();
@@ -194,13 +198,10 @@ export class ChessRenderer {
     if (useRightLayout) {
       const movesSection = content.createDiv({ cls: 'cv-moves-section cv-moves-section-puzzle' });
       this.puzzle.createMoveList(movesSection);
-    }
+      this.renderPuzzleFooter(mainContainer);
+    } else {
+      this.renderPuzzleFooter(boardColumn);
 
-    // Footer with puzzle controls
-    this.renderPuzzleFooter(mainContainer);
-
-    // Move list below footer for bottom layout — inside board column
-    if (!useRightLayout) {
       const bottomMoves = boardColumn.createDiv({ cls: 'cv-bottom-moves cv-bottom-moves-puzzle' });
       this.puzzle.createMoveList(bottomMoves);
     }
