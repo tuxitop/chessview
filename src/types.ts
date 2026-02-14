@@ -164,12 +164,12 @@ export interface MoveData {
 
 // NAG (Numeric Annotation Glyphs) mapping
 export const NAG_SYMBOLS: Record<string, { symbol: string; label: string }> = {
-  $1: { symbol: '!', label: 'Good move' },
+  $1: { symbol: '!', label: 'Great move' },
   $2: { symbol: '?', label: 'Mistake' },
   $3: { symbol: '!!', label: 'Brilliant move' },
   $4: { symbol: '??', label: 'Blunder' },
   $5: { symbol: '!?', label: 'Interesting move' },
-  $6: { symbol: '?!', label: 'Dubious move' },
+  $6: { symbol: '?!', label: 'Inaccuracy' },
   $7: { symbol: '□', label: 'Forced move' },
   $9: { symbol: '✕', label: 'Miss' },
   $10: { symbol: '=', label: 'Equal position' },

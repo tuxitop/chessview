@@ -296,13 +296,13 @@ cg-board piece.fading {
   --cv-light: #f0d9b5;
   --cv-dark: #b58863;
 
-  --cv-nag-brilliant: #1baca6;
-  --cv-nag-good: #5b8c3e;
+  --cv-nag-brilliant: #26c2a3;
+  --cv-nag-good: #749bbf;
   --cv-nag-interesting: #e69d00;
-  --cv-nag-dubious: #cf8f00;
-  --cv-nag-mistake: #e6912c;
-  --cv-nag-blunder: #ca3431;
-  --cv-nag-miss: #ca3431;
+  --cv-nag-dubious: #f7c631;
+  --cv-nag-mistake: #ffa459;
+  --cv-nag-blunder: #fa412d;
+  --cv-nag-miss: #ff7769;
   --cv-nag-neutral: #888;
   --cv-nag-positional: #4a90d9;
 
