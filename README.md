@@ -21,14 +21,17 @@ An interactive chess board plugin for [Obsidian](https://obsidian.md). Render ga
 
 ### Game viewer
 ![Game viewer](screenshots/game-viewer.png)
+
 *PGN game with move list, annotations, and navigation controls*
 
 ### Puzzle mode
 ![Puzzle mode](screenshots/puzzle-mode.png)
+
 *Interactive puzzle with hint and solution buttons*
 
 ### Arrows and circles
 ![Annotations](screenshots/annotations.png)
+
 *Board annotations using arrows and circle markers*
 
 ### Mobile view
