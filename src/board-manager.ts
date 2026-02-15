@@ -56,8 +56,40 @@ export class BoardManager {
     this.boardWrapperEl = boardSection;
     this.boardEl = boardSection.createDiv({ cls: 'cv-board cg-wrap' });
     this.applyBoardSize();
+    this.setInitialBoardDimensions();
     this.createNagOverlay(boardSection);
     this.setupResizeObserver();
+  }
+
+  private setInitialBoardDimensions(): void {
+    if (!this.boardEl) return;
+
+    // Set initial dimensions synchronously based on the board size setting
+    // so CSS variables are available before ResizeObserver fires
+    let width: number;
+    switch (this.settings.boardSize) {
+    case 'small':
+      width = 280;
+      break;
+    case 'large':
+      width = 480;
+      break;
+    case 'auto': {
+      // For auto, use the board element's actual width if available,
+      // otherwise estimate from parent
+      const elWidth = this.boardEl.clientWidth;
+      width = elWidth > 0 ? elWidth : (this.container.parentElement?.clientWidth ?? 360);
+      break;
+    }
+    case 'medium':
+    default:
+      width = 360;
+      break;
+    }
+
+    this.boardEl.style.height = `${width}px`;
+    this.container.style.setProperty('--cv-board-height', `${width}px`);
+    this.container.style.setProperty('--cv-board-width', `${width}px`);
   }
 
   initChessground(
