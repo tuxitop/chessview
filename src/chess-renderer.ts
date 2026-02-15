@@ -223,18 +223,19 @@ export class ChessRenderer {
 
     if (this.settings.moveListPosition === 'bottom') return false;
 
-    // Use board pixel width + move list width to determine if right layout fits.
-    // We can't rely on container.parentElement.clientWidth at render time
-    // because the element may not be in the DOM yet. Instead, use the
-    // Obsidian workspace leaf width via the closest .workspace-leaf-content.
+    // Never use right layout on narrow screens
+    const screenWidth = window.innerWidth;
+    if (screenWidth <= 600) return false;
+
     const boardWidth = this.getBoardPixelWidth();
     const needed = boardWidth + MOVE_LIST_PANEL_WIDTH;
 
     const leaf = this.container.closest('.workspace-leaf-content');
-    const available = leaf ? leaf.clientWidth : document.body.clientWidth;
+    const available = leaf ? leaf.clientWidth : screenWidth;
 
     return available >= needed;
   }
+  
   private getBoardPixelWidth(): number {
     switch (this.settings.boardSize) {
     case 'small': return 280;
