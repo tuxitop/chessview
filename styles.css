@@ -694,7 +694,7 @@ cg-board piece.fading {
   max-height: var(--cv-board-height, 360px);
   border-left: 1px solid var(--background-modifier-border);
   overflow: hidden;
-  --cv-comment-height: calc(var(--cv-board-height, 360px) * 0.25);
+  --cv-comment-height: calc(var(--cv-board-height, 360px) * 0.4);
 }
 
 /* ============================================================================
@@ -827,9 +827,9 @@ cg-board piece.fading {
 .cv-comment {
   padding: 0;
   background: var(--background-primary-alt);
-  font-size: 12px;
+  font-size: 12.5px;
   font-style: italic;
-  color: var(--text-muted);
+  color: var(--text-faint);
   flex-shrink: 0;
   max-height: var(--cv-comment-height, 60px);
   overflow-y: auto;
