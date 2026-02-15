@@ -534,6 +534,8 @@ cg-board piece.fading {
   align-items: flex-start;
   justify-content: flex-end;
   pointer-events: none;
+  padding-top: 1.5%;
+  padding-right: 2%;
 }
 
 .cv-nag-glyph-inner {
