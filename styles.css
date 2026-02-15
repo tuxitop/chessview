@@ -962,7 +962,7 @@ cg-board piece.fading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 10px;
+  padding: 6px;
   border-top: 1px solid var(--background-modifier-border);
   gap: 4px 6px;
   flex-wrap: wrap;
