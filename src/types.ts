@@ -111,7 +111,7 @@ export interface ParsedChessData {
   type: 'game' | 'puzzle' | 'fen';
   fen: string | null;
   pgn: string | null;
-  moves: MoveData[];
+  moves: MoveNode[];
   orientation: 'white' | 'black';
   isStatic: boolean;
   isEditable: boolean;
@@ -160,6 +160,17 @@ export interface MoveData {
   comment?: string;
   nag?: string;
   annotations?: MoveAnnotation;
+}
+
+export interface MoveNode {
+  san: string;
+  from: string;
+  to: string;
+  fen: string;
+  comment?: string;
+  nag?: string;
+  annotations?: MoveAnnotation;
+  variations: MoveNode[][];
 }
 
 // NAG (Numeric Annotation Glyphs) mapping
@@ -248,7 +259,6 @@ export const UI_LABELS = {
   play: '▶',
   pause: '⏸',
   flipBoard: '⇅',
-  returnToMainLine: '↩ Return to main line',
 
   // Navigation tooltips
   firstMoveTooltip: 'First move (Home)',

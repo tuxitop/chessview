@@ -5,6 +5,7 @@ import { Key } from 'chessground/types';
 import {
   ChessViewSettings,
   ParsedChessData,
+  MoveNode,
   MoveData,
   FIGURINE_NOTATION,
   NAG_SYMBOLS,
@@ -14,12 +15,6 @@ import {
 import { BoardManager } from './board-manager';
 import { getValidMoves } from './utils';
 
-interface BranchPoint {
-  moveIndex: number;
-  fen: string;
-  moves: MoveData[];
-}
-
 export class NavigationController {
   private chess: Chess;
   private data: ParsedChessData;
@@ -27,12 +22,10 @@ export class NavigationController {
   private board: BoardManager;
   private startFen: string;
 
-  private moves: MoveData[] = [];
-  private mainLineMoves: MoveData[] = [];
-  private currentMoveIndex: number = 0;
-
-  private branchStack: BranchPoint[] = [];
-  private isInBranch: boolean = false;
+  private moveTree: MoveNode[] = [];
+  private currentLine: MoveNode[] = [];
+  private currentIndex: number = 0;
+  private lineStack: { line: MoveNode[]; index: number }[] = [];
 
   private isPlaying: boolean = false;
   private playInterval: ReturnType<typeof setInterval> | null = null;
@@ -41,7 +34,11 @@ export class NavigationController {
   private commentEl: HTMLElement | null = null;
   private counterEl: HTMLElement | null = null;
   private playBtnEl: HTMLElement | null = null;
-  private branchOverlayEl: HTMLElement | null = null;
+
+  private firstBtnEl: HTMLElement | null = null;
+  private prevBtnEl: HTMLElement | null = null;
+  private nextBtnEl: HTMLElement | null = null;
+  private lastBtnEl: HTMLElement | null = null;
 
   private destroyed: boolean = false;
 
@@ -59,25 +56,15 @@ export class NavigationController {
     this.startFen = startFen;
 
     if (data.moves && data.moves.length > 0 && !data.isPuzzle) {
-      this.moves = [...data.moves];
-      this.mainLineMoves = [...data.moves];
+      this.moveTree = data.moves;
+      this.currentLine = this.moveTree;
     }
   }
 
   createMoveList(movesSection: HTMLElement): void {
     this.moveListEl = movesSection.createDiv({ cls: 'cv-moves' });
     this.renderMoveList();
-    // Comment area inside the moves section — always present
     this.commentEl = movesSection.createDiv({ cls: 'cv-comment' });
-  }
-
-  createBranchOverlay(boardSection: HTMLElement): void {
-    this.branchOverlayEl = boardSection.createDiv({ cls: 'cv-branch-overlay' });
-    const returnBtn = this.branchOverlayEl.createEl('button', {
-      cls: 'cv-branch-return',
-      text: UI_LABELS.returnToMainLine
-    });
-    returnBtn.onclick = () => this.returnToMainLine();
   }
 
   setCounterEl(el: HTMLElement): void {
@@ -89,39 +76,73 @@ export class NavigationController {
     this.playBtnEl = el;
   }
 
+  setNavButtons(
+    first: HTMLElement,
+    prev: HTMLElement,
+    next: HTMLElement,
+    last: HTMLElement
+  ): void {
+    this.firstBtnEl = first;
+    this.prevBtnEl = prev;
+    this.nextBtnEl = next;
+    this.lastBtnEl = last;
+    this.updateNavButtons();
+  }
+
   get moveCount(): number {
-    return this.moves.length;
+    return this.moveTree.length;
   }
 
-  get currentIndex(): number {
-    return this.currentMoveIndex;
+  get currentMoveIndex(): number {
+    return this.currentIndex;
   }
 
-  get currentMoves(): readonly MoveData[] {
-    return this.moves;
+  get currentMoves(): readonly MoveNode[] {
+    return this.currentLine;
   }
+
+  private get inVariation(): boolean {
+    return this.lineStack.length > 0;
+  }
+
+  private get isAtStart(): boolean {
+    return this.currentIndex === 0 && !this.inVariation;
+  }
+
+  private get isAtEnd(): boolean {
+    return this.currentIndex >= this.currentLine.length;
+  }
+
+  private get canGoBack(): boolean {
+    // In a variation we can always go back (pop out at index 1)
+    if (this.inVariation) return true;
+    return this.currentIndex > 0;
+  }
+
+  private get canGoForward(): boolean {
+    return this.currentIndex < this.currentLine.length;
+  }
+
+  // =====================================================================
+  // NAVIGATION
+  // =====================================================================
 
   goToMove(index: number): void {
     if (this.destroyed) return;
 
-    index = Math.max(0, Math.min(this.moves.length, index));
+    index = Math.max(0, Math.min(this.currentLine.length, index));
 
-    this.chess.load(this.startFen);
-    for (let i = 0; i < index; i++) {
-      try {
-        this.chess.move(this.moves[i].san);
-      } catch {
-        index = i;
-        break;
-      }
-    }
+    this.replayToPosition(this.currentLine, index);
+    this.currentIndex = index;
 
-    this.currentMoveIndex = index;
-    const last = index > 0 ? this.moves[index - 1] : null;
+    const last = index > 0 ? this.currentLine[index - 1] : null;
+    const lastMoveData = last
+      ? { san: last.san, from: last.from, to: last.to, fen: last.fen }
+      : null;
 
     const isEditable = this.data.isEditable && !this.data.isStatic;
 
-    this.board.syncBoard(this.chess, last, {
+    this.board.syncBoard(this.chess, lastMoveData, {
       movable: isEditable
         ? {
           free: false,
@@ -135,39 +156,172 @@ export class NavigationController {
           }
         }
         : { free: false, color: undefined },
-      moves: this.moves,
-      currentMoveIndex: this.currentMoveIndex
+      moves: this.currentLine.map(nodeToMoveData),
+      currentMoveIndex: this.currentIndex
     });
 
-    this.updateMoveHighlights();
+    this.renderMoveList();
     this.updateCounter();
     this.updateComment();
-    this.board.updateNagOverlay(this.moves, this.currentMoveIndex);
-    this.board.updateNagHighlight(this.moves, this.currentMoveIndex);
-    this.updateBranchIndicator();
+    this.updateNavButtons();
+    this.board.updateNagOverlay(
+      this.currentLine.map(nodeToMoveData),
+      this.currentIndex
+    );
+    this.board.updateNagHighlight(
+      this.currentLine.map(nodeToMoveData),
+      this.currentIndex
+    );
   }
 
-  goToStart(): void {
+  goToVariation(parentLine: MoveNode[], moveIndex: number, varIndex: number): void {
+    if (this.destroyed) return;
+
+    const parentMove = parentLine[moveIndex];
+    if (!parentMove || !parentMove.variations[varIndex]) return;
+
+    this.lineStack.push({
+      line: this.currentLine,
+      index: moveIndex + 1
+    });
+
+    this.currentLine = parentMove.variations[varIndex];
+    this.currentIndex = 0;
+
     this.goToMove(0);
   }
 
+  goToMoveInLine(line: MoveNode[], index: number): void {
+    if (this.destroyed) return;
+
+    if (line === this.currentLine) {
+      this.goToMove(index);
+      return;
+    }
+
+    const path = this.findLinePath(this.moveTree, line);
+    if (!path) return;
+
+    this.lineStack = [];
+    this.currentLine = this.moveTree;
+
+    for (const segment of path) {
+      this.lineStack.push({
+        line: this.currentLine,
+        index: segment.parentMoveIndex + 1
+      });
+      this.currentLine = segment.line;
+    }
+
+    this.goToMove(index);
+  }
+
+  private findLinePath(
+    searchIn: MoveNode[],
+    target: MoveNode[]
+  ): { parentMoveIndex: number; line: MoveNode[] }[] | null {
+    if (searchIn === target) return [];
+
+    for (let i = 0; i < searchIn.length; i++) {
+      const move = searchIn[i];
+      for (let v = 0; v < move.variations.length; v++) {
+        const varLine = move.variations[v];
+        if (varLine === target) {
+          return [{ parentMoveIndex: i, line: varLine }];
+        }
+        const subPath = this.findLinePath(varLine, target);
+        if (subPath) {
+          return [{ parentMoveIndex: i, line: varLine }, ...subPath];
+        }
+      }
+    }
+    return null;
+  }
+
+  goToStart(): void {
+    if (this.destroyed) return;
+
+    if (!this.inVariation) {
+      // Main line: go to starting position (index 0, no highlight)
+      if (this.currentIndex === 0) return;
+      this.goToMove(0);
+      return;
+    }
+
+    if (this.currentIndex <= 1) {
+      // At first move (or before) in a variation — pop up one level
+      const parent = this.lineStack.pop()!;
+      this.currentLine = parent.line;
+
+      if (this.lineStack.length === 0) {
+        // Landed in main line — go to starting position
+        this.goToMove(0);
+      } else {
+        // Landed in another variation — go to its first move
+        this.goToMove(1);
+      }
+    } else {
+      // Deeper in a variation — jump to first move of current variation
+      this.goToMove(1);
+    }
+  }
+
   goToEnd(): void {
-    this.goToMove(this.moves.length);
+    this.goToMove(this.currentLine.length);
   }
 
   goForward(): void {
-    this.goToMove(this.currentMoveIndex + 1);
+    if (this.canGoForward) {
+      this.goToMove(this.currentIndex + 1);
+    }
   }
 
   goBack(): void {
-    this.goToMove(this.currentMoveIndex - 1);
+    if (this.destroyed) return;
+
+    if (this.inVariation && this.currentIndex <= 1) {
+      // At first move (or before) in a variation — pop out to parent
+      const parent = this.lineStack.pop()!;
+      this.currentLine = parent.line;
+      // Go to the move before the branch point (the move that has the variation)
+      this.goToMove(parent.index - 1);
+    } else if (this.currentIndex > 0) {
+      this.goToMove(this.currentIndex - 1);
+    }
   }
 
   goToStartMove(): void {
-    if (this.data.startMove > 0) {
-      this.goToMove(Math.min(this.data.startMove, this.moves.length));
+    if (this.data.startMove <= 0) return;
+
+    const target = this.data.startMove;
+
+    let startFullMove = 1;
+    let startIsBlack = false;
+    if (this.data.fen) {
+      const parts = this.data.fen.split(/\s+/);
+      startFullMove = parseInt(parts[5] ?? '1') || 1;
+      startIsBlack = parts[1] === 'b';
     }
+
+    let plyIndex: number;
+    if (target < startFullMove) {
+      plyIndex = 0;
+    } else if (startIsBlack) {
+      if (target === startFullMove) {
+        plyIndex = 1;
+      } else {
+        plyIndex = 1 + (target - startFullMove) * 2;
+      }
+    } else {
+      plyIndex = (target - startFullMove + 1) * 2;
+    }
+
+    this.goToMove(Math.min(plyIndex, this.currentLine.length));
   }
+
+  // =====================================================================
+  // USER MOVES
+  // =====================================================================
 
   async handleUserMove(orig: Key, dest: Key): Promise<void> {
     if (this.destroyed) return;
@@ -178,76 +332,91 @@ export class NavigationController {
       const move = this.chess.move({ from: orig, to: dest, promotion });
       if (!move) return;
 
+      // Check if this matches the next move in the current line
       if (
-        this.currentMoveIndex < this.mainLineMoves.length &&
-        this.mainLineMoves[this.currentMoveIndex].san === move.san
+        this.currentIndex < this.currentLine.length &&
+        this.currentLine[this.currentIndex].san === move.san
       ) {
-        this.currentMoveIndex++;
+        this.currentIndex++;
         this.board.syncAfterMove(
           this.chess,
           move,
-          this.moves,
-          this.currentMoveIndex
+          this.currentLine.map(nodeToMoveData),
+          this.currentIndex
         );
-        this.updateMoveHighlights();
+        this.renderMoveList();
         this.updateCounter();
         this.updateComment();
-        this.board.updateNagOverlay(this.moves, this.currentMoveIndex);
-        this.board.updateNagHighlight(this.moves, this.currentMoveIndex);
+        this.updateNavButtons();
+        this.board.updateNagOverlay(
+          this.currentLine.map(nodeToMoveData),
+          this.currentIndex
+        );
+        this.board.updateNagHighlight(
+          this.currentLine.map(nodeToMoveData),
+          this.currentIndex
+        );
         return;
       }
 
-      if (!this.isInBranch) {
-        this.branchStack.push({
-          moveIndex: this.currentMoveIndex,
-          fen: this.startFen,
-          moves: [...this.mainLineMoves]
-        });
-        this.isInBranch = true;
-        this.moves = this.moves.slice(0, this.currentMoveIndex);
-      } else {
-        this.moves = this.moves.slice(0, this.currentMoveIndex);
+      // Check if it matches any existing variation at current position
+      if (this.currentIndex < this.currentLine.length) {
+        const currentMove = this.currentLine[this.currentIndex];
+        for (let v = 0; v < currentMove.variations.length; v++) {
+          if (
+            currentMove.variations[v].length > 0 &&
+            currentMove.variations[v][0].san === move.san
+          ) {
+            this.chess.undo();
+            this.goToVariation(this.currentLine, this.currentIndex, v);
+            this.goToMove(1);
+            return;
+          }
+        }
       }
 
-      const moveData: MoveData = {
+      // Create a new variation
+      const newNode: MoveNode = {
         san: move.san,
         from: move.from,
         to: move.to,
-        fen: this.chess.fen()
+        fen: this.chess.fen(),
+        variations: []
       };
 
-      this.moves.push(moveData);
-      this.currentMoveIndex = this.moves.length;
-
-      this.board.syncAfterMove(
-        this.chess,
-        move,
-        this.moves,
-        this.currentMoveIndex
-      );
-      this.renderMoveList();
-      this.updateCounter();
-      this.updateComment();
-      this.board.updateNagOverlay(this.moves, this.currentMoveIndex);
-      this.board.updateNagHighlight(this.moves, this.currentMoveIndex);
-      this.updateBranchIndicator();
+      if (this.currentIndex < this.currentLine.length) {
+        // Branch: create variation on the current move
+        this.currentLine[this.currentIndex].variations.push([newNode]);
+        this.chess.undo();
+        this.goToVariation(
+          this.currentLine,
+          this.currentIndex,
+          this.currentLine[this.currentIndex].variations.length - 1
+        );
+        this.goToMove(1);
+      } else {
+        // At end of line: append
+        this.currentLine.push(newNode);
+        this.currentIndex = this.currentLine.length;
+        this.board.syncAfterMove(
+          this.chess,
+          move,
+          this.currentLine.map(nodeToMoveData),
+          this.currentIndex
+        );
+        this.renderMoveList();
+        this.updateCounter();
+        this.updateComment();
+        this.updateNavButtons();
+      }
     } catch {
       this.board.syncBoard(this.chess, null);
     }
   }
 
-  private returnToMainLine(): void {
-    if (!this.isInBranch || this.branchStack.length === 0) return;
-
-    const branch = this.branchStack.pop()!;
-    this.moves = [...branch.moves];
-    this.mainLineMoves = [...branch.moves];
-    this.isInBranch = this.branchStack.length > 0;
-
-    this.goToMove(branch.moveIndex);
-    this.renderMoveList();
-    this.updateBranchIndicator();
-  }
+  // =====================================================================
+  // AUTOPLAY
+  // =====================================================================
 
   toggleAutoPlay(): void {
     if (this.isPlaying) {
@@ -265,11 +434,11 @@ export class NavigationController {
       this.playBtnEl.setAttribute('title', UI_LABELS.pauseTooltip);
     }
     this.playInterval = setInterval(() => {
-      if (this.currentMoveIndex >= this.moves.length) {
+      if (this.currentIndex >= this.currentLine.length) {
         this.stopAutoPlay();
         return;
       }
-      this.goToMove(this.currentMoveIndex + 1);
+      this.goToMove(this.currentIndex + 1);
     }, this.settings.autoPlaySpeed);
   }
 
@@ -285,37 +454,114 @@ export class NavigationController {
     }
   }
 
+  // =====================================================================
+  // MOVE LIST RENDERING
+  // =====================================================================
+
   private renderMoveList(): void {
     if (!this.moveListEl) return;
     this.moveListEl.empty();
 
-    const list = this.moveListEl.createDiv({ cls: 'cv-moves-grid' });
+    const container = this.moveListEl.createDiv({ cls: 'cv-moves-tree' });
 
-    for (let i = 0; i < this.moves.length; i += 2) {
-      list.createSpan({
-        cls: 'cv-move-num',
-        text: `${Math.floor(i / 2) + 1}.`
+    let baseMoveNum = 1;
+    let baseIsBlack = false;
+    if (this.data.fen) {
+      const parts = this.data.fen.split(/\s+/);
+      baseMoveNum = parseInt(parts[5] ?? '1') || 1;
+      baseIsBlack = parts[1] === 'b';
+    }
+
+    this.renderLine(container, this.moveTree, 0, baseMoveNum, baseIsBlack);
+  }
+
+  private renderLine(
+    container: HTMLElement,
+    line: MoveNode[],
+    depth: number,
+    startMoveNum: number,
+    startsOnBlack: boolean
+  ): void {
+    let moveNum = startMoveNum;
+    let isBlack = startsOnBlack;
+    let i = 0;
+
+    if (isBlack && line.length > 0) {
+      const row = container.createDiv({
+        cls: depth === 0 ? 'cv-moves-row' : 'cv-moves-row cv-variation-row'
+      });
+      row.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
+      row.createSpan({ cls: 'cv-move-placeholder', text: UI_LABELS.movePlaceholder });
+      this.createMoveSpan(row, line[0], line, 0, depth);
+
+      this.renderVariationsForMove(container, line[0], depth, moveNum, true);
+
+      i = 1;
+      moveNum++;
+      isBlack = false;
+    }
+
+    while (i < line.length) {
+      const row = container.createDiv({
+        cls: depth === 0 ? 'cv-moves-row' : 'cv-moves-row cv-variation-row'
       });
 
-      this.createMoveSpan(list, this.moves[i], i);
+      row.createSpan({ cls: 'cv-move-num', text: `${moveNum}.` });
 
-      if (i + 1 < this.moves.length) {
-        this.createMoveSpan(list, this.moves[i + 1], i + 1);
+      this.createMoveSpan(row, line[i], line, i, depth);
+      const whiteMove = line[i];
+      i++;
+
+      if (i < line.length) {
+        this.createMoveSpan(row, line[i], line, i, depth);
+        const blackMove = line[i];
+        i++;
+
+        this.renderVariationsForMove(container, whiteMove, depth, moveNum, false);
+        this.renderVariationsForMove(container, blackMove, depth, moveNum, true);
       } else {
-        list.createSpan({ cls: 'cv-move-empty' });
+        row.createSpan({ cls: 'cv-move-empty' });
+        this.renderVariationsForMove(container, whiteMove, depth, moveNum, false);
       }
+
+      moveNum++;
+    }
+  }
+
+  private renderVariationsForMove(
+    container: HTMLElement,
+    move: MoveNode,
+    depth: number,
+    moveNum: number,
+    parentIsBlack: boolean
+  ): void {
+    if (move.variations.length === 0) return;
+
+    for (const variation of move.variations) {
+      if (variation.length === 0) continue;
+
+      const varContainer = container.createDiv({ cls: 'cv-variation' });
+      if (depth >= 2) {
+        varContainer.addClass('cv-variation-deep');
+      }
+
+      this.renderLine(varContainer, variation, depth + 1, moveNum, parentIsBlack);
     }
   }
 
   private createMoveSpan(
     container: HTMLElement,
-    move: MoveData,
-    index: number
+    move: MoveNode,
+    line: MoveNode[],
+    index: number,
+    _depth: number
   ): void {
+    const isActive = line === this.currentLine && index === this.currentIndex - 1;
+
     const classes = ['cv-move'];
     if (move.comment) classes.push('has-comment');
     if (move.annotations) classes.push('has-annotation');
-    if (index === this.currentMoveIndex - 1) classes.push('active');
+    if (isActive) classes.push('active');
 
     const span = container.createSpan({
       cls: classes.join(' '),
@@ -332,7 +578,15 @@ export class NavigationController {
       });
     }
 
-    span.onclick = () => this.goToMove(index + 1);
+    span.onclick = () => {
+      this.goToMoveInLine(line, index + 1);
+    };
+
+    if (isActive) {
+      setTimeout(() => {
+        span.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }, 0);
+    }
   }
 
   private formatMove(san: string): string {
@@ -342,21 +596,14 @@ export class NavigationController {
     return san;
   }
 
-  private updateMoveHighlights(): void {
-    if (!this.moveListEl) return;
-    const moves = this.moveListEl.querySelectorAll('.cv-move');
-    moves.forEach((el, i) => {
-      el.removeClass('active');
-      if (i === this.currentMoveIndex - 1) {
-        el.addClass('active');
-        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    });
-  }
+  // =====================================================================
+  // UI UPDATES
+  // =====================================================================
 
   private updateCounter(): void {
     if (this.counterEl) {
-      this.counterEl.textContent = `${this.currentMoveIndex}/${this.moves.length}`;
+      const prefix = this.inVariation ? '⑂ ' : '';
+      this.counterEl.textContent = `${prefix}${this.currentIndex}/${this.currentLine.length}`;
     }
   }
 
@@ -364,9 +611,9 @@ export class NavigationController {
     if (!this.commentEl) return;
     this.commentEl.empty();
 
-    if (this.currentMoveIndex <= 0) return;
+    if (this.currentIndex <= 0) return;
 
-    const move = this.moves[this.currentMoveIndex - 1];
+    const move = this.currentLine[this.currentIndex - 1];
     if (!move) return;
 
     const hasNag = !!move.nag;
@@ -395,17 +642,84 @@ export class NavigationController {
     }
   }
 
-  private updateBranchIndicator(): void {
-    if (!this.branchOverlayEl) return;
-    if (this.isInBranch) {
-      this.branchOverlayEl.addClass('visible');
-    } else {
-      this.branchOverlayEl.removeClass('visible');
+  private updateNavButtons(): void {
+    if (this.firstBtnEl) {
+      if (this.isAtStart) {
+        this.firstBtnEl.setAttribute('disabled', '');
+        this.firstBtnEl.addClass('cv-btn-disabled');
+      } else {
+        this.firstBtnEl.removeAttribute('disabled');
+        this.firstBtnEl.removeClass('cv-btn-disabled');
+      }
+    }
+
+    if (this.prevBtnEl) {
+      if (!this.canGoBack) {
+        this.prevBtnEl.setAttribute('disabled', '');
+        this.prevBtnEl.addClass('cv-btn-disabled');
+      } else {
+        this.prevBtnEl.removeAttribute('disabled');
+        this.prevBtnEl.removeClass('cv-btn-disabled');
+      }
+    }
+
+    if (this.nextBtnEl) {
+      if (!this.canGoForward) {
+        this.nextBtnEl.setAttribute('disabled', '');
+        this.nextBtnEl.addClass('cv-btn-disabled');
+      } else {
+        this.nextBtnEl.removeAttribute('disabled');
+        this.nextBtnEl.removeClass('cv-btn-disabled');
+      }
+    }
+
+    if (this.lastBtnEl) {
+      if (this.isAtEnd) {
+        this.lastBtnEl.setAttribute('disabled', '');
+        this.lastBtnEl.addClass('cv-btn-disabled');
+      } else {
+        this.lastBtnEl.removeAttribute('disabled');
+        this.lastBtnEl.removeClass('cv-btn-disabled');
+      }
     }
   }
 
+  // =====================================================================
+  // REPLAY
+  // =====================================================================
+
+  private replayToPosition(line: MoveNode[], index: number): void {
+    this.chess.load(this.startFen);
+
+    for (const frame of this.lineStack) {
+      for (let i = 0; i < frame.index - 1; i++) {
+        if (i < frame.line.length) {
+          try {
+            this.chess.move(frame.line[i].san);
+          } catch {
+            return;
+          }
+        }
+      }
+    }
+
+    for (let i = 0; i < index; i++) {
+      if (i < line.length) {
+        try {
+          this.chess.move(line[i].san);
+        } catch {
+          return;
+        }
+      }
+    }
+  }
+
+  // =====================================================================
+  // CLIPBOARD
+  // =====================================================================
+
   getClipboardText(): string {
-    if (this.data.type === 'fen' || this.moves.length === 0) {
+    if (this.data.type === 'fen' || this.moveTree.length === 0) {
       return this.chess.fen();
     }
 
@@ -413,16 +727,63 @@ export class NavigationController {
       .map(([k, v]) => `[${k} "${v}"]`)
       .join('\n');
 
-    const movesText = this.moves
-      .map((m, i) => {
-        let str = i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ${m.san}` : m.san;
-        if (m.comment && m.comment !== 'wrong') str += ` {${m.comment}}`;
-        return str;
-      })
-      .join(' ');
+    let startMoveNum = 1;
+    let startIsBlack = false;
+    if (this.data.fen) {
+      const parts = this.data.fen.split(/\s+/);
+      startMoveNum = parseInt(parts[5] ?? '1') || 1;
+      startIsBlack = parts[1] === 'b';
+    }
+
+    const movesText = this.serializeLine(this.moveTree, startMoveNum, startIsBlack);
 
     return headers ? `${headers}\n\n${movesText}` : movesText;
   }
+
+  private serializeLine(
+    line: readonly MoveNode[],
+    startMoveNum: number,
+    startsOnBlack: boolean
+  ): string {
+    const parts: string[] = [];
+    let moveNum = startMoveNum;
+    let isBlack = startsOnBlack;
+
+    for (let i = 0; i < line.length; i++) {
+      const move = line[i];
+
+      if (!isBlack) {
+        parts.push(`${moveNum}.`);
+      } else if (i === 0) {
+        parts.push(`${moveNum}...`);
+      }
+
+      parts.push(move.san);
+
+      if (move.nag) parts.push(move.nag);
+      if (move.comment && move.comment !== 'wrong') {
+        parts.push(`{${move.comment}}`);
+      }
+
+      for (const variation of move.variations) {
+        const varText = this.serializeLine(
+          variation,
+          moveNum,
+          !isBlack
+        );
+        parts.push(`(${varText})`);
+      }
+
+      if (isBlack) moveNum++;
+      isBlack = !isBlack;
+    }
+
+    return parts.join(' ');
+  }
+
+  // =====================================================================
+  // CLEANUP
+  // =====================================================================
 
   destroy(): void {
     this.destroyed = true;
@@ -431,6 +792,25 @@ export class NavigationController {
     this.commentEl = null;
     this.counterEl = null;
     this.playBtnEl = null;
-    this.branchOverlayEl = null;
+    this.firstBtnEl = null;
+    this.prevBtnEl = null;
+    this.nextBtnEl = null;
+    this.lastBtnEl = null;
   }
+}
+
+// =====================================================================
+// HELPERS
+// =====================================================================
+
+function nodeToMoveData(node: MoveNode): MoveData {
+  return {
+    san: node.san,
+    from: node.from,
+    to: node.to,
+    fen: node.fen,
+    comment: node.comment,
+    nag: node.nag,
+    annotations: node.annotations
+  };
 }

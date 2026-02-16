@@ -125,12 +125,10 @@ export class ChessRenderer {
       content.addClass('cv-content-vertical');
     }
 
-    // Board column
     const boardColumn = content.createDiv({ cls: 'cv-board-column' });
     const boardSection = boardColumn.createDiv({ cls: 'cv-board-section' });
     this.board!.createBoard(boardSection);
 
-    // Create nav controller
     this.nav = new NavigationController(
       this.chess,
       this.data,
@@ -143,19 +141,17 @@ export class ChessRenderer {
       void this.nav!.handleUserMove(orig, dest);
     };
     this.board!.initChessground(this.chess, userMoveHandler);
-    this.nav.createBranchOverlay(boardSection);
 
-    // Move list — right of board
+    // No more branch overlay
+
     if (useRightLayout && this.settings.showMoveList && this.nav.moveCount > 0) {
       const movesSection = content.createDiv({ cls: 'cv-moves-section' });
       this.nav.createMoveList(movesSection);
     }
 
     if (useRightLayout) {
-      // Footer spans full width below board + moves panel
       this.renderFooter(mainContainer);
     } else {
-      // Footer inside board column, between board and move list
       this.renderFooter(boardColumn);
 
       if (this.settings.showMoveList && this.nav.moveCount > 0) {
@@ -235,7 +231,7 @@ export class ChessRenderer {
 
     return available >= needed;
   }
-  
+
   private getBoardPixelWidth(): number {
     switch (this.settings.boardSize) {
     case 'small': return 280;
@@ -359,13 +355,13 @@ export class ChessRenderer {
     const leftGroup = footer.createDiv({ cls: 'cv-footer-left' });
 
     if (this.nav && this.nav.moveCount > 0) {
-      this.createControlBtn(
+      const firstBtn = this.createControlBtn(
         leftGroup,
         UI_LABELS.firstMove,
         UI_LABELS.firstMoveTooltip,
         () => this.nav!.goToStart()
       );
-      this.createControlBtn(
+      const prevBtn = this.createControlBtn(
         leftGroup,
         UI_LABELS.previousMove,
         UI_LABELS.previousMoveTooltip,
@@ -381,18 +377,20 @@ export class ChessRenderer {
       playBtn.addClass('cv-play-btn');
       this.nav.setPlayBtnEl(playBtn);
 
-      this.createControlBtn(
+      const nextBtn = this.createControlBtn(
         leftGroup,
         UI_LABELS.nextMove,
         UI_LABELS.nextMoveTooltip,
         () => this.nav!.goForward()
       );
-      this.createControlBtn(
+      const lastBtn = this.createControlBtn(
         leftGroup,
         UI_LABELS.lastMove,
         UI_LABELS.lastMoveTooltip,
         () => this.nav!.goToEnd()
       );
+
+      this.nav.setNavButtons(firstBtn, prevBtn, nextBtn, lastBtn);
 
       const counterEl = leftGroup.createSpan({ cls: 'cv-counter' });
       this.nav.setCounterEl(counterEl);
@@ -404,7 +402,13 @@ export class ChessRenderer {
       this.isFlipped = !this.isFlipped;
       this.board?.flipBoard();
       if (this.nav) {
-        this.board?.updateNagOverlay(this.nav.currentMoves, this.nav.currentIndex);
+        this.board?.updateNagOverlay(
+          this.nav.currentMoves.map((n) => ({
+            san: n.san, from: n.from, to: n.to, fen: n.fen,
+            comment: n.comment, nag: n.nag, annotations: n.annotations
+          })),
+          this.nav.currentMoveIndex
+        );
       }
     });
 

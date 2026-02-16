@@ -1,9 +1,9 @@
 // src/parser.ts
 import { Chess } from 'chess.js';
-import { stripVariations } from './utils';
 import {
   ParsedChessData,
   MoveData,
+  MoveNode,
   MoveAnnotation,
   ANNOTATION_COLORS,
   NAG_SYMBOLS
@@ -92,7 +92,6 @@ function splitSections(source: string): {
     return { markers: markerLines, chessData };
   }
 
-  // No separator — detect markers line by line
   const markers: string[] = [];
   const chessLines: string[] = [];
   let inChessData = false;
@@ -164,16 +163,18 @@ function parseChessData(
       result.headers[match[1]] = match[2];
     }
 
-    const moves = parseMovesFromPgn(
-      chessData,
-      result.fen,
-      result.warnings
-    );
-
     if (result.isPuzzle) {
-      result.solutionMoves = moves;
+      result.solutionMoves = parseFlatMoves(
+        chessData,
+        result.fen,
+        result.warnings
+      );
     } else {
-      result.moves = moves;
+      result.moves = parseMovesWithVariations(
+        chessData,
+        result.fen,
+        result.warnings
+      );
     }
   }
 }
@@ -300,10 +301,299 @@ function parseAnnotationMarker(
 }
 
 // =========================================================================
-// MOVE PARSING
+// TOKENIZER
 // =========================================================================
 
-export function parseMovesFromPgn(
+interface PgnToken {
+  type: 'move' | 'comment' | 'nag' | 'open_variation' | 'close_variation';
+  value: string;
+}
+
+function tokenizePgn(pgn: string): PgnToken[] {
+  let cleaned = pgn.replace(/\[[^\]]*"[^\]]*"\]/g, '');
+  cleaned = cleaned
+    .replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/g, '')
+    .trim();
+
+  const tokens: PgnToken[] = [];
+  let i = 0;
+
+  while (i < cleaned.length) {
+    const ch = cleaned[i];
+
+    // Skip whitespace
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
+
+    // Skip move numbers: digits followed by dots
+    if (/\d/.test(ch)) {
+      let j = i;
+      while (j < cleaned.length && /[\d.]/.test(cleaned[j])) j++;
+      // Check if this was just a move number (ends with dot or whitespace)
+      const segment = cleaned.slice(i, j);
+      if (/^\d+\.+$/.test(segment)) {
+        i = j;
+        continue;
+      }
+      // Otherwise fall through to move parsing
+    }
+
+    // Comment
+    if (ch === '{') {
+      const end = cleaned.indexOf('}', i + 1);
+      if (end === -1) {
+        i++;
+        continue;
+      }
+      tokens.push({ type: 'comment', value: cleaned.slice(i + 1, end).trim() });
+      i = end + 1;
+      continue;
+    }
+
+    // NAG
+    if (ch === '$') {
+      let j = i + 1;
+      while (j < cleaned.length && /\d/.test(cleaned[j])) j++;
+      tokens.push({ type: 'nag', value: cleaned.slice(i, j) });
+      i = j;
+      continue;
+    }
+
+    // Open variation
+    if (ch === '(') {
+      tokens.push({ type: 'open_variation', value: '(' });
+      i++;
+      continue;
+    }
+
+    // Close variation
+    if (ch === ')') {
+      tokens.push({ type: 'close_variation', value: ')' });
+      i++;
+      continue;
+    }
+
+    // Move (SAN) — collect until whitespace or special character
+    if (/[a-hKQRBNO]/.test(ch)) {
+      let j = i;
+      while (
+        j < cleaned.length &&
+        !/[\s{}()$]/.test(cleaned[j])
+      ) {
+        j++;
+      }
+      const moveStr = cleaned.slice(i, j);
+      tokens.push({ type: 'move', value: moveStr });
+      i = j;
+      continue;
+    }
+
+    // Skip anything else
+    i++;
+  }
+
+  return tokens;
+}
+
+// =========================================================================
+// TREE MOVE PARSING (for games with variations)
+// =========================================================================
+
+export function parseMovesWithVariations(
+  pgn: string,
+  startFen: string | null,
+  warnings?: string[]
+): MoveNode[] {
+  const tokens = tokenizePgn(pgn);
+
+  const rootChess = new Chess();
+  if (startFen) {
+    try {
+      rootChess.load(normalizeFen(startFen));
+    } catch {
+      return [];
+    }
+  }
+
+  interface ParseFrame {
+    chess: Chess;
+    moves: MoveNode[];
+    parentMoves: MoveNode[] | null;
+    branchFromIndex: number;
+  }
+
+  const stack: ParseFrame[] = [];
+  let currentMoves: MoveNode[] = [];
+  let chess = rootChess;
+  let pendingComment: string | undefined;
+  let pendingAnnotation: MoveAnnotation | undefined;
+  let pendingNag: string | undefined;
+
+  for (const token of tokens) {
+    switch (token.type) {
+    case 'comment': {
+      const content = token.value;
+      const annotation = parseCommentAnnotations(content);
+      const textComment = content
+        .replace(/\[%cal\s+[^\]]+\]/gi, '')
+        .replace(/\[%csl\s+[^\]]+\]/gi, '')
+        .trim();
+
+      if (currentMoves.length > 0) {
+        const lastMove = currentMoves[currentMoves.length - 1];
+        if (textComment) lastMove.comment = textComment;
+        if (annotation.arrows.length > 0 || annotation.circles.length > 0) {
+          lastMove.annotations = mergeAnnotations(
+            lastMove.annotations,
+            annotation
+          );
+        }
+      } else {
+        pendingComment = textComment || undefined;
+        pendingAnnotation =
+            annotation.arrows.length > 0 || annotation.circles.length > 0
+              ? annotation
+              : undefined;
+      }
+      break;
+    }
+
+    case 'nag': {
+      const nagInfo = NAG_SYMBOLS[token.value];
+      if (nagInfo) {
+        if (currentMoves.length > 0) {
+          currentMoves[currentMoves.length - 1].nag = nagInfo.symbol;
+        } else {
+          pendingNag = nagInfo.symbol;
+        }
+      }
+      break;
+    }
+
+    case 'open_variation': {
+      // Save current state — rewind chess to before the last move
+      // The variation starts from the position before the last move
+      // in the current line
+      if (currentMoves.length === 0) break;
+
+      const branchIndex = currentMoves.length - 1;
+      const branchFen = branchIndex > 0
+        ? currentMoves[branchIndex - 1].fen
+        : (startFen ? normalizeFen(startFen) : new Chess().fen());
+
+      // Push current frame
+      stack.push({
+        chess,
+        moves: currentMoves,
+        parentMoves: currentMoves,
+        branchFromIndex: branchIndex
+      });
+
+      // Start new variation context
+      const varChess = new Chess();
+      try {
+        varChess.load(branchFen);
+      } catch {
+        break;
+      }
+      chess = varChess;
+      currentMoves = [];
+      pendingComment = undefined;
+      pendingAnnotation = undefined;
+      pendingNag = undefined;
+      break;
+    }
+
+    case 'close_variation': {
+      if (stack.length === 0) break;
+
+      const frame = stack.pop()!;
+
+      // Attach the completed variation to the parent move
+      if (currentMoves.length > 0 && frame.parentMoves) {
+        const parentMove = frame.parentMoves[frame.branchFromIndex];
+        if (parentMove) {
+          parentMove.variations.push(currentMoves);
+        }
+      }
+
+      // Restore state
+      chess = frame.chess;
+      currentMoves = frame.moves;
+      pendingComment = undefined;
+      pendingAnnotation = undefined;
+      pendingNag = undefined;
+      break;
+    }
+
+    case 'move': {
+      let moveStr = token.value;
+      let inlineNag: string | undefined;
+
+      const nagSuffix = moveStr.match(/([!?]{1,2})$/);
+      if (nagSuffix) {
+        inlineNag = nagSuffix[1];
+        moveStr = moveStr.replace(/[!?]+$/, '');
+      }
+
+      try {
+        const result = chess.move(moveStr, { sloppy: true });
+        if (!result) continue;
+
+        const node: MoveNode = {
+          san: result.san,
+          from: result.from,
+          to: result.to,
+          fen: chess.fen(),
+          comment: pendingComment,
+          nag: pendingNag,
+          annotations: pendingAnnotation,
+          variations: []
+        };
+
+        if (inlineNag && NAG_SYMBOLS[inlineNag]) {
+          node.nag = NAG_SYMBOLS[inlineNag].symbol;
+        }
+
+        currentMoves.push(node);
+        pendingComment = undefined;
+        pendingAnnotation = undefined;
+        pendingNag = undefined;
+      } catch {
+        if (warnings) {
+          warnings.push(
+            `Skipped invalid move "${moveStr}" after ${currentMoves.length} moves`
+          );
+        }
+      }
+      break;
+    }
+    }
+  }
+
+  // Close any unclosed variations
+  while (stack.length > 0) {
+    const frame = stack.pop()!;
+    if (currentMoves.length > 0 && frame.parentMoves) {
+      const parentMove = frame.parentMoves[frame.branchFromIndex];
+      if (parentMove) {
+        parentMove.variations.push(currentMoves);
+      }
+    }
+    chess = frame.chess;
+    currentMoves = frame.moves;
+  }
+
+  return currentMoves;
+}
+
+// =========================================================================
+// FLAT MOVE PARSING (for puzzles — no variations)
+// =========================================================================
+
+export function parseFlatMoves(
   pgn: string,
   startFen: string | null,
   warnings?: string[]
@@ -414,6 +704,10 @@ export function parseMovesFromPgn(
   return moves;
 }
 
+// =========================================================================
+// COMMENT ANNOTATIONS
+// =========================================================================
+
 export function parseCommentAnnotations(comment: string): MoveAnnotation {
   const annotation: MoveAnnotation = {
     arrows: [],
@@ -470,8 +764,40 @@ function mergeAnnotations(
 }
 
 // =========================================================================
-// FEN UTILITIES
+// UTILITIES
 // =========================================================================
+
+function stripVariations(text: string): string {
+  let result = '';
+  let depth = 0;
+  let inComment = false;
+
+  for (const ch of text) {
+    if (ch === '{' && depth === 0) {
+      inComment = true;
+      result += ch;
+      continue;
+    }
+    if (ch === '}' && inComment) {
+      inComment = false;
+      result += ch;
+      continue;
+    }
+    if (inComment) {
+      result += ch;
+      continue;
+    }
+
+    if (ch === '(') {
+      depth++;
+    } else if (ch === ')') {
+      depth = Math.max(0, depth - 1);
+    } else if (depth === 0) {
+      result += ch;
+    }
+  }
+  return result;
+}
 
 export function normalizeFen(fen: string): string {
   const parts = fen.trim().split(/\s+/);
@@ -512,10 +838,6 @@ export function validateFen(fen: string): { valid: boolean; error?: string } {
   }
 }
 
-// =========================================================================
-// ANALYSIS URLS
-// =========================================================================
-
 export function generateAnalysisUrls(data: ParsedChessData): {
   lichess: string;
   chessCom: string;
@@ -532,17 +854,23 @@ export function generateAnalysisUrls(data: ParsedChessData): {
     lichessUrl = `https://lichess.org/analysis/${fenForLichess}${colorParam}`;
     chessComUrl = `https://www.chess.com/analysis?fen=${encodeURIComponent(data.fen)}${flipParam}`;
   } else {
-    const movesSan =
-      data.moves.length > 0
-        ? data.moves.map((m) => m.san).join(' ')
-        : data.solutionMoves.map((m) => m.san).join(' ');
+    const movesSan = flattenMainLine(data.moves)
+      .map((m) => m.san)
+      .join(' ');
+    const fallback = data.solutionMoves.map((m) => m.san).join(' ');
+    const san = movesSan || fallback;
     const pgnForUrl = data.fen
-      ? `[SetUp "1"][FEN "${data.fen}"] ${movesSan}`
-      : movesSan;
+      ? `[SetUp "1"][FEN "${data.fen}"] ${san}`
+      : san;
 
     lichessUrl = `https://lichess.org/analysis/pgn/${encodeURIComponent(pgnForUrl)}${colorParam}`;
     chessComUrl = `https://www.chess.com/analysis?pgn=${encodeURIComponent(pgnForUrl)}${flipParam}`;
   }
 
   return { lichess: lichessUrl, chessCom: chessComUrl };
+}
+
+/** Flatten main line MoveNodes to just san strings (ignoring variations) */
+function flattenMainLine(moves: readonly MoveNode[]): MoveNode[] {
+  return moves.map((m) => m);
 }
