@@ -6,7 +6,8 @@ import {
   MoveNode,
   MoveAnnotation,
   ANNOTATION_COLORS,
-  NAG_SYMBOLS
+  NAG_BY_CODE,
+  NAG_BY_INLINE,
 } from './types';
 
 const SEPARATOR = '---';
@@ -331,13 +332,11 @@ function tokenizePgn(pgn: string): PgnToken[] {
     if (/\d/.test(ch)) {
       let j = i;
       while (j < cleaned.length && /[\d.]/.test(cleaned[j])) j++;
-      // Check if this was just a move number (ends with dot or whitespace)
       const segment = cleaned.slice(i, j);
       if (/^\d+\.+$/.test(segment)) {
         i = j;
         continue;
       }
-      // Otherwise fall through to move parsing
     }
 
     // Comment
@@ -375,7 +374,7 @@ function tokenizePgn(pgn: string): PgnToken[] {
       continue;
     }
 
-    // Move (SAN) — collect until whitespace or special character
+    // Move (SAN)
     if (/[a-hKQRBNO]/.test(ch)) {
       let j = i;
       while (
@@ -395,6 +394,28 @@ function tokenizePgn(pgn: string): PgnToken[] {
   }
 
   return tokens;
+}
+
+// =========================================================================
+// INLINE NAG EXTRACTION
+// =========================================================================
+
+/**
+ * Extract inline NAG suffix from a move string.
+ * Returns the NAG code (e.g. '$1') and the cleaned move string.
+ */
+function extractInlineNag(moveStr: string): { move: string; nagCode: string | undefined } {
+  const nagSuffix = moveStr.match(/([!?]{1,2})$/);
+  if (!nagSuffix) return { move: moveStr, nagCode: undefined };
+
+  const inline = nagSuffix[1];
+  const def = NAG_BY_INLINE[inline];
+  if (!def) return { move: moveStr, nagCode: undefined };
+
+  return {
+    move: moveStr.replace(/[!?]+$/, ''),
+    nagCode: def.code
+  };
 }
 
 // =========================================================================
@@ -461,21 +482,18 @@ export function parseMovesWithVariations(
     }
 
     case 'nag': {
-      const nagInfo = NAG_SYMBOLS[token.value];
-      if (nagInfo) {
+      const def = NAG_BY_CODE[token.value];
+      if (def) {
         if (currentMoves.length > 0) {
-          currentMoves[currentMoves.length - 1].nag = nagInfo.symbol;
+          currentMoves[currentMoves.length - 1].nag = def.code;
         } else {
-          pendingNag = nagInfo.symbol;
+          pendingNag = def.code;
         }
       }
       break;
     }
 
     case 'open_variation': {
-      // Save current state — rewind chess to before the last move
-      // The variation starts from the position before the last move
-      // in the current line
       if (currentMoves.length === 0) break;
 
       const branchIndex = currentMoves.length - 1;
@@ -483,7 +501,6 @@ export function parseMovesWithVariations(
         ? currentMoves[branchIndex - 1].fen
         : (startFen ? normalizeFen(startFen) : new Chess().fen());
 
-      // Push current frame
       stack.push({
         chess,
         moves: currentMoves,
@@ -491,7 +508,6 @@ export function parseMovesWithVariations(
         branchFromIndex: branchIndex
       });
 
-      // Start new variation context
       const varChess = new Chess();
       try {
         varChess.load(branchFen);
@@ -511,7 +527,6 @@ export function parseMovesWithVariations(
 
       const frame = stack.pop()!;
 
-      // Attach the completed variation to the parent move
       if (currentMoves.length > 0 && frame.parentMoves) {
         const parentMove = frame.parentMoves[frame.branchFromIndex];
         if (parentMove) {
@@ -519,7 +534,6 @@ export function parseMovesWithVariations(
         }
       }
 
-      // Restore state
       chess = frame.chess;
       currentMoves = frame.moves;
       pendingComment = undefined;
@@ -529,14 +543,7 @@ export function parseMovesWithVariations(
     }
 
     case 'move': {
-      let moveStr = token.value;
-      let inlineNag: string | undefined;
-
-      const nagSuffix = moveStr.match(/([!?]{1,2})$/);
-      if (nagSuffix) {
-        inlineNag = nagSuffix[1];
-        moveStr = moveStr.replace(/[!?]+$/, '');
-      }
+      const { move: moveStr, nagCode: inlineNagCode } = extractInlineNag(token.value);
 
       try {
         const result = chess.move(moveStr, { sloppy: true });
@@ -553,8 +560,8 @@ export function parseMovesWithVariations(
           variations: []
         };
 
-        if (inlineNag && NAG_SYMBOLS[inlineNag]) {
-          node.nag = NAG_SYMBOLS[inlineNag].symbol;
+        if (inlineNagCode) {
+          node.nag = inlineNagCode;
         }
 
         currentMoves.push(node);
@@ -651,23 +658,16 @@ export function parseFlatMoves(
             : undefined;
       }
     } else if (token.startsWith('$')) {
-      const nagInfo = NAG_SYMBOLS[token];
-      if (nagInfo) {
+      const def = NAG_BY_CODE[token];
+      if (def) {
         if (moves.length > 0) {
-          moves[moves.length - 1].nag = nagInfo.symbol;
+          moves[moves.length - 1].nag = def.code;
         } else {
-          pendingNag = nagInfo.symbol;
+          pendingNag = def.code;
         }
       }
     } else {
-      let moveStr = token;
-      let inlineNag: string | undefined;
-
-      const nagSuffix = moveStr.match(/([!?]{1,2})$/);
-      if (nagSuffix) {
-        inlineNag = nagSuffix[1];
-        moveStr = moveStr.replace(/[!?]+$/, '');
-      }
+      const { move: moveStr, nagCode: inlineNagCode } = extractInlineNag(token);
 
       try {
         const result = chess.move(moveStr, { sloppy: true });
@@ -683,8 +683,8 @@ export function parseFlatMoves(
           annotations: pendingAnnotation
         };
 
-        if (inlineNag && NAG_SYMBOLS[inlineNag]) {
-          moveData.nag = NAG_SYMBOLS[inlineNag].symbol;
+        if (inlineNagCode) {
+          moveData.nag = inlineNagCode;
         }
 
         moves.push(moveData);

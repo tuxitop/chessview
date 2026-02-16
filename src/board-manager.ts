@@ -10,8 +10,8 @@ import {
   ParsedChessData,
   MoveData,
   BOARD_THEMES,
-  NAG_CLASSES,
-  SQUARE_SIZE_PERCENT
+  SQUARE_SIZE_PERCENT,
+  resolveNag
 } from './types';
 import {
   isValidSquare,
@@ -64,8 +64,6 @@ export class BoardManager {
   private setInitialBoardDimensions(): void {
     if (!this.boardEl) return;
 
-    // Set initial dimensions synchronously based on the board size setting
-    // so CSS variables are available before ResizeObserver fires
     let width: number;
     switch (this.settings.boardSize) {
     case 'small':
@@ -75,8 +73,6 @@ export class BoardManager {
       width = 480;
       break;
     case 'auto': {
-      // For auto, use the board element's actual width if available,
-      // otherwise estimate from parent
       const elWidth = this.boardEl.clientWidth;
       width = elWidth > 0 ? elWidth : (this.container.parentElement?.clientWidth ?? 360);
       break;
@@ -351,22 +347,22 @@ export class BoardManager {
     const move = moves[currentMoveIndex - 1];
     if (!move?.nag) return;
 
-    const nagClass = NAG_CLASSES[move.nag];
-    if (!nagClass) return;
+    const def = resolveNag(move.nag);
+    if (!def) return;
 
     const square = move.to;
     const pos = squareToPosition(square, this.isFlipped);
     if (!pos) return;
 
     const glyph = this.nagOverlayEl.createDiv({
-      cls: `cv-nag-glyph ${nagClass}`
+      cls: `cv-nag-glyph ${def.cssClass}`
     });
     glyph.style.left = `${pos.x}%`;
     glyph.style.top = `${pos.y}%`;
 
     glyph.createSpan({
       cls: 'cv-nag-glyph-inner',
-      text: move.nag
+      text: def.symbol
     });
   }
 
@@ -381,10 +377,10 @@ export class BoardManager {
     const move = moves[currentMoveIndex - 1];
     if (!move?.nag) return;
 
-    const nagClass = NAG_CLASSES[move.nag];
-    if (!nagClass) return;
+    const def = resolveNag(move.nag);
+    if (!def) return;
 
-    const highlightName = nagClass.replace('nag-', '');
+    const highlightName = def.cssClass.replace('nag-', '');
     this.container.dataset.nagHighlight = highlightName;
   }
 
@@ -413,6 +409,7 @@ export class BoardManager {
       this.resizeObserver.observe(this.boardEl);
     }
   }
+
   applyTheme(): void {
     const theme = this.settings.boardTheme;
     const colors =

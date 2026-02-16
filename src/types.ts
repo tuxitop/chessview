@@ -173,50 +173,80 @@ export interface MoveNode {
   variations: MoveNode[][];
 }
 
-// NAG (Numeric Annotation Glyphs) mapping
-export const NAG_SYMBOLS: Record<string, { symbol: string; label: string }> = {
-  $1: { symbol: '!', label: 'Great move' },
-  $2: { symbol: '?', label: 'Mistake' },
-  $3: { symbol: '!!', label: 'Brilliant move' },
-  $4: { symbol: '??', label: 'Blunder' },
-  $5: { symbol: '!?', label: 'Interesting move' },
-  $6: { symbol: '?!', label: 'Inaccuracy' },
-  $7: { symbol: '□', label: 'Forced move' },
-  $9: { symbol: '✕', label: 'Miss' },
-  $10: { symbol: '=', label: 'Equal position' },
-  $13: { symbol: '∞', label: 'Unclear position' },
-  $14: { symbol: '⩲', label: 'White slightly better' },
-  $15: { symbol: '⩱', label: 'Black slightly better' },
-  $16: { symbol: '±', label: 'White better' },
-  $17: { symbol: '∓', label: 'Black better' },
-  $18: { symbol: '+−', label: 'White winning' },
-  $19: { symbol: '−+', label: 'Black winning' },
-  '!!': { symbol: '!!', label: 'Brilliant move' },
-  '!?': { symbol: '!?', label: 'Interesting move' },
-  '?!': { symbol: '?!', label: 'Dubious move' },
-  '??': { symbol: '??', label: 'Blunder' },
-  '!': { symbol: '!', label: 'Good move' },
-  '?': { symbol: '?', label: 'Mistake' }
-};
+// ============================================================================
+// NAG DEFINITIONS — single source of truth
+// ============================================================================
 
-export const NAG_CLASSES: Record<string, string> = {
-  '!': 'nag-good',
-  '!!': 'nag-brilliant',
-  '?': 'nag-mistake',
-  '??': 'nag-blunder',
-  '!?': 'nag-interesting',
-  '?!': 'nag-dubious',
-  '□': 'nag-forced',
-  '✕': 'nag-miss',
-  '=': 'nag-equal',
-  '∞': 'nag-unclear',
-  '⩲': 'nag-white-slight',
-  '⩱': 'nag-black-slight',
-  '±': 'nag-white-better',
-  '∓': 'nag-black-better',
-  '+−': 'nag-white-winning',
-  '−+': 'nag-black-winning'
-};
+export interface NagDefinition {
+  /** PGN numeric code, e.g. '$1' */
+  readonly code: string;
+  /** Display symbol, e.g. '!' */
+  readonly symbol: string;
+  /** Valid inline PGN suffix, e.g. '!' — null if only expressible as $N */
+  readonly inlinePgn: string | null;
+  /** Human-readable label */
+  readonly label: string;
+  /** CSS class name (without 'nag-' prefix is NOT stripped — full class) */
+  readonly cssClass: string;
+}
+
+export const NAG_DEFINITIONS: readonly NagDefinition[] = [
+  { code: '$1',  symbol: '!',  inlinePgn: '!',  label: 'Great move',              cssClass: 'nag-good' },
+  { code: '$2',  symbol: '?',  inlinePgn: '?',  label: 'Mistake',                 cssClass: 'nag-mistake' },
+  { code: '$3',  symbol: '!!', inlinePgn: '!!', label: 'Brilliant move',           cssClass: 'nag-brilliant' },
+  { code: '$4',  symbol: '??', inlinePgn: '??', label: 'Blunder',                  cssClass: 'nag-blunder' },
+  { code: '$5',  symbol: '!?', inlinePgn: '!?', label: 'Interesting move',         cssClass: 'nag-interesting' },
+  { code: '$6',  symbol: '?!', inlinePgn: '?!', label: 'Inaccuracy',              cssClass: 'nag-inaccuracy' },
+  { code: '$7',  symbol: '□',  inlinePgn: null, label: 'Forced move',             cssClass: 'nag-forced' },
+  { code: '$9',  symbol: '✕',  inlinePgn: null, label: 'Miss',                    cssClass: 'nag-miss' },
+  { code: '$10', symbol: '=',  inlinePgn: null, label: 'Equal position',          cssClass: 'nag-equal' },
+  { code: '$13', symbol: '∞',  inlinePgn: null, label: 'Unclear position',        cssClass: 'nag-unclear' },
+  { code: '$14', symbol: '⩲',  inlinePgn: null, label: 'White is slightly better', cssClass: 'nag-white-slight' },
+  { code: '$15', symbol: '⩱',  inlinePgn: null, label: 'Black is slightly better', cssClass: 'nag-black-slight' },
+  { code: '$16', symbol: '±',  inlinePgn: null, label: 'White is better',          cssClass: 'nag-white-better' },
+  { code: '$17', symbol: '∓',  inlinePgn: null, label: 'Black is better',          cssClass: 'nag-black-better' },
+  { code: '$18', symbol: '+−', inlinePgn: null, label: 'White is winning',         cssClass: 'nag-white-winning' },
+  { code: '$19', symbol: '−+', inlinePgn: null, label: 'Black is winning',         cssClass: 'nag-black-winning' },
+];
+
+// Derived lookup maps
+
+/** Look up by PGN code: '$1' → NagDefinition */
+export const NAG_BY_CODE: Readonly<Record<string, NagDefinition>> = (() => {
+  const map: Record<string, NagDefinition> = {};
+  for (const def of NAG_DEFINITIONS) {
+    map[def.code] = def;
+  }
+  return map;
+})();
+
+/** Look up by inline PGN suffix: '!' → NagDefinition, '!?' → NagDefinition */
+export const NAG_BY_INLINE: Readonly<Record<string, NagDefinition>> = (() => {
+  const map: Record<string, NagDefinition> = {};
+  for (const def of NAG_DEFINITIONS) {
+    if (def.inlinePgn) {
+      map[def.inlinePgn] = def;
+    }
+  }
+  return map;
+})();
+
+/** Look up by display symbol: '!' → NagDefinition */
+export const NAG_BY_SYMBOL: Readonly<Record<string, NagDefinition>> = (() => {
+  const map: Record<string, NagDefinition> = {};
+  for (const def of NAG_DEFINITIONS) {
+    map[def.symbol] = def;
+  }
+  return map;
+})();
+
+/**
+ * Resolve a NAG code to its definition.
+ * Accepts '$1', '!', '!!', etc.
+ */
+export function resolveNag(nag: string): NagDefinition | undefined {
+  return NAG_BY_CODE[nag] ?? NAG_BY_INLINE[nag] ?? NAG_BY_SYMBOL[nag];
+}
 
 export const FIGURINE_NOTATION: Record<string, string> = {
   K: '♔',

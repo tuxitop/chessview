@@ -299,7 +299,7 @@ cg-board piece.fading {
   --cv-nag-brilliant: #26c2a3;
   --cv-nag-good: #749bbf;
   --cv-nag-interesting: #e69d00;
-  --cv-nag-dubious: #f7c631;
+  --cv-nag-inaccuracy: #f7c631;
   --cv-nag-mistake: #ffa459;
   --cv-nag-blunder: #fa412d;
   --cv-nag-miss: #ff7769;
@@ -564,8 +564,8 @@ cg-board piece.fading {
 .cv-nag-glyph.nag-interesting .cv-nag-glyph-inner {
   background: var(--cv-nag-interesting);
 }
-.cv-nag-glyph.nag-dubious .cv-nag-glyph-inner {
-  background: var(--cv-nag-dubious);
+.cv-nag-glyph.nag-inaccuracy  .cv-nag-glyph-inner {
+  background: var(--cv-nag-inaccuracy);
 }
 .cv-nag-glyph.nag-mistake .cv-nag-glyph-inner {
   background: var(--cv-nag-mistake);
@@ -620,10 +620,10 @@ cg-board piece.fading {
   ) !important;
 }
 
-.chessview[data-nag-highlight='dubious'] cg-board square.last-move {
+.chessview[data-nag-highlight='inaccuracy'] cg-board square.last-move {
   background-color: color-mix(
     in srgb,
-    var(--cv-nag-dubious) 30%,
+    var(--cv-nag-inaccuracy) 30%,
     transparent
   ) !important;
 }
@@ -802,8 +802,8 @@ cg-board piece.fading {
 .cv-move-nag.nag-interesting {
   color: var(--cv-nag-interesting);
 }
-.cv-move-nag.nag-dubious {
-  color: var(--cv-nag-dubious);
+.cv-move-nag.nag-inaccuracy {
+  color: var(--cv-nag-inaccuracy);
 }
 .cv-move-nag.nag-mistake {
   color: var(--cv-nag-mistake);
@@ -916,8 +916,8 @@ cg-board piece.fading {
 .cv-comment-nag.nag-interesting {
   background: var(--cv-nag-interesting);
 }
-.cv-comment-nag.nag-dubious {
-  background: var(--cv-nag-dubious);
+.cv-comment-nag.nag-inaccuracy {
+  background: var(--cv-nag-inaccuracy);
 }
 .cv-comment-nag.nag-mistake {
   background: var(--cv-nag-mistake);

@@ -8,9 +8,9 @@ import {
   MoveNode,
   MoveData,
   FIGURINE_NOTATION,
-  NAG_SYMBOLS,
-  NAG_CLASSES,
-  UI_LABELS
+  UI_LABELS,
+  resolveNag,
+  NAG_BY_CODE
 } from './types';
 import { BoardManager } from './board-manager';
 import { getValidMoves } from './utils';
@@ -114,7 +114,6 @@ export class NavigationController {
   }
 
   private get canGoBack(): boolean {
-    // In a variation we can always go back (pop out at index 1)
     if (this.inVariation) return true;
     return this.currentIndex > 0;
   }
@@ -242,7 +241,6 @@ export class NavigationController {
     if (this.destroyed) return;
 
     if (!this.inVariation) {
-      // Main line: go to starting position (index 0, no highlight)
       if (this.currentIndex === 0) return;
       this.goToMove(0);
       return;
@@ -283,7 +281,6 @@ export class NavigationController {
       // At first move (or before) in a variation — pop out to parent
       const parent = this.lineStack.pop()!;
       this.currentLine = parent.line;
-      // Go to the move before the branch point (the move that has the variation)
       this.goToMove(parent.index - 1);
     } else if (this.currentIndex > 0) {
       this.goToMove(this.currentIndex - 1);
@@ -332,7 +329,6 @@ export class NavigationController {
       const move = this.chess.move({ from: orig, to: dest, promotion });
       if (!move) return;
 
-      // Check if this matches the next move in the current line
       if (
         this.currentIndex < this.currentLine.length &&
         this.currentLine[this.currentIndex].san === move.san
@@ -359,7 +355,6 @@ export class NavigationController {
         return;
       }
 
-      // Check if it matches any existing variation at current position
       if (this.currentIndex < this.currentLine.length) {
         const currentMove = this.currentLine[this.currentIndex];
         for (let v = 0; v < currentMove.variations.length; v++) {
@@ -375,7 +370,6 @@ export class NavigationController {
         }
       }
 
-      // Create a new variation
       const newNode: MoveNode = {
         san: move.san,
         from: move.from,
@@ -385,7 +379,6 @@ export class NavigationController {
       };
 
       if (this.currentIndex < this.currentLine.length) {
-        // Branch: create variation on the current move
         this.currentLine[this.currentIndex].variations.push([newNode]);
         this.chess.undo();
         this.goToVariation(
@@ -395,7 +388,6 @@ export class NavigationController {
         );
         this.goToMove(1);
       } else {
-        // At end of line: append
         this.currentLine.push(newNode);
         this.currentIndex = this.currentLine.length;
         this.board.syncAfterMove(
@@ -571,11 +563,13 @@ export class NavigationController {
     span.createSpan({ text: this.formatMove(move.san) });
 
     if (move.nag) {
-      const nagClass = NAG_CLASSES[move.nag] ?? '';
-      span.createSpan({
-        cls: `cv-move-nag ${nagClass}`,
-        text: move.nag
-      });
+      const def = resolveNag(move.nag);
+      if (def) {
+        span.createSpan({
+          cls: `cv-move-nag ${def.cssClass}`,
+          text: def.symbol
+        });
+      }
     }
 
     span.onclick = () => {
@@ -622,16 +616,13 @@ export class NavigationController {
     if (!hasNag && !hasComment) return;
 
     if (hasNag && move.nag) {
-      const nagClass = NAG_CLASSES[move.nag] ?? '';
-      const nagInfo = Object.values(NAG_SYMBOLS).find(
-        (n) => n.symbol === move.nag
-      );
-      const label = nagInfo ? nagInfo.label : move.nag;
-
-      this.commentEl.createSpan({
-        cls: `cv-comment-nag ${nagClass}`,
-        text: `${move.nag} ${label}`
-      });
+      const def = resolveNag(move.nag);
+      if (def) {
+        this.commentEl.createSpan({
+          cls: `cv-comment-nag ${def.cssClass}`,
+          text: `${def.symbol} ${def.label}`
+        });
+      }
     }
 
     if (hasComment && move.comment) {
@@ -760,7 +751,14 @@ export class NavigationController {
 
       parts.push(move.san);
 
-      if (move.nag) parts.push(move.nag);
+      if (move.nag) {
+        const def = NAG_BY_CODE[move.nag];
+        if (def) {
+          // Use inline PGN form if available (e.g. '!'), otherwise $N code
+          parts.push(def.inlinePgn ?? def.code);
+        }
+      }
+
       if (move.comment && move.comment !== 'wrong') {
         parts.push(`{${move.comment}}`);
       }
