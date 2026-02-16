@@ -1,6 +1,6 @@
 {
     "name": "chessview",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "description": "Interactive chess board plugin for Obsidian",
     "author": "Ali Mousavi",
     "license": "MIT",
