@@ -473,12 +473,20 @@ export class ChessRenderer {
     const dropdown = wrapper.createDiv({ cls: 'cv-menu-dropdown' });
     this.menuEl = dropdown;
 
-    // Copy
-    const copyItem = dropdown.createDiv({ cls: 'cv-menu-item' });
-    copyItem.textContent = UI_LABELS.menuCopy;
-    copyItem.onclick = () => {
+    // Copy PGN
+    const copyPgnItem = dropdown.createDiv({ cls: 'cv-menu-item' });
+    copyPgnItem.textContent = UI_LABELS.menuCopyPgn;
+    copyPgnItem.onclick = () => {
       this.closeMenu();
-      void this.copyToClipboard();
+      void this.copyPgnToClipboard();
+    };
+
+    // Copy FEN
+    const copyFenItem = dropdown.createDiv({ cls: 'cv-menu-item' });
+    copyFenItem.textContent = UI_LABELS.menuCopyFen;
+    copyFenItem.onclick = () => {
+      this.closeMenu();
+      void this.copyFenToClipboard();
     };
 
     // Analysis links
@@ -523,33 +531,6 @@ export class ChessRenderer {
     }
   }
 
-  private createCopyIcon(container: HTMLElement): void {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', '20');
-    svg.setAttribute('height', '20');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', '2');
-
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', '9');
-    rect.setAttribute('y', '9');
-    rect.setAttribute('width', '13');
-    rect.setAttribute('height', '13');
-    rect.setAttribute('rx', '2');
-    svg.appendChild(rect);
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute(
-      'd',
-      'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'
-    );
-    svg.appendChild(path);
-
-    container.appendChild(svg);
-  }
-
   private createControlBtn(
     container: HTMLElement,
     icon: string,
@@ -574,7 +555,7 @@ export class ChessRenderer {
     return btn;
   }
 
-  private async copyToClipboard(): Promise<void> {
+  private async copyPgnToClipboard(): Promise<void> {
     let text: string;
 
     if (this.data.isPuzzle) {
@@ -597,6 +578,14 @@ export class ChessRenderer {
       text = this.chess.fen();
     }
 
+    await this.writeClipboard(text);
+  }
+
+  private async copyFenToClipboard(): Promise<void> {
+    await this.writeClipboard(this.chess.fen());
+  }
+
+  private async writeClipboard(text: string): Promise<void> {
     const btn = this.container.querySelector('.cv-menu-btn');
 
     try {

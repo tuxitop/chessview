@@ -301,7 +301,8 @@ export const UI_LABELS = {
 
   // Menu
   menuTooltip: 'More actions',
-  menuCopy: '📋 Copy PGN/FEN',
+  menuCopyPgn: '📋 Copy PGN',
+  menuCopyFen: '📋 Copy FEN',
   menuLichess: '♞ Analyze on Lichess',
   menuChessCom: '♟ Analyze on Chess.com',
 
@@ -352,7 +353,7 @@ export const PUZZLE_OPPONENT_RESPONSE_DELAY = 400;
 export const HINT_HIGHLIGHT_DURATION = 2000;
 
 /** Duration of clipboard copy success indicator (ms) */
-export const COPY_FEEDBACK_DURATION = 1000;
+export const COPY_FEEDBACK_DURATION = 2000;
 
 /** Duration of clipboard copy failure indicator (ms) */
 export const COPY_FAILURE_DURATION = 2000;
